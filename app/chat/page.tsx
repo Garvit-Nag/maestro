@@ -5,41 +5,24 @@ import { ChatSidebar } from "@/components/maestro/chat-sidebar"
 import { ChatEmptyState } from "@/components/maestro/chat-empty-state"
 import { ChatMessages, Message } from "@/components/maestro/chat-messages"
 import { ChatInput } from "@/components/maestro/chat-input"
+import { demoResponses } from "@/lib/content/chat"
 
-// Simulate AI responses with placeholder data
 function generateResponse(query: string): { content: string; data?: Message["data"] } {
-  const lowerQuery = query.toLowerCase()
-  
-  if (lowerQuery.includes("table") || lowerQuery.includes("standings")) {
-    return {
-      content: "Here are the current Premier League standings. Arsenal continue to lead the table with a strong goal difference.",
-      data: { type: "standings" }
-    }
+  const q = query.toLowerCase()
+
+  if (q.includes("table") || q.includes("standings")) {
+    return { content: demoResponses.standings, data: { type: "standings" } }
   }
-  
-  if (lowerQuery.includes("lineup") || lowerQuery.includes("line up")) {
-    return {
-      content: "Based on recent form and availability, here's the predicted lineup for Arsenal this weekend.",
-      data: { type: "lineup" }
-    }
+  if (q.includes("lineup") || q.includes("line up")) {
+    return { content: demoResponses.lineup, data: { type: "lineup" } }
   }
-  
-  if (lowerQuery.includes("golden boot") || lowerQuery.includes("goals")) {
-    return {
-      content: "The Champions League golden boot race is heating up. Here are the current top scorers.",
-      data: { type: "stats" }
-    }
+  if (q.includes("golden boot") || q.includes("goals")) {
+    return { content: demoResponses.goldenBoot, data: { type: "stats" } }
   }
-  
-  if (lowerQuery.includes("transfer")) {
-    return {
-      content: "The latest transfer news: Manchester United are reportedly in talks with a high-profile midfielder, while Chelsea continue their rebuild under the new manager. Arsenal are looking to strengthen their defensive options before the deadline."
-    }
+  if (q.includes("transfer")) {
+    return { content: demoResponses.transfer }
   }
-  
-  return {
-    content: "I understand you're asking about football. While I don't have real-time data in this demo, Maestro can provide insights on match analysis, player statistics, tactical breakdowns, and transfer news from 150+ leagues worldwide."
-  }
+  return { content: demoResponses.default }
 }
 
 export default function ChatPage() {
@@ -47,17 +30,15 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSendMessage = useCallback((content: string) => {
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content,
     }
-    
-    setMessages(prev => [...prev, userMessage])
+
+    setMessages((prev) => [...prev, userMessage])
     setIsLoading(true)
 
-    // Simulate AI response delay
     setTimeout(() => {
       const response = generateResponse(content)
       const assistantMessage: Message = {
@@ -66,8 +47,7 @@ export default function ChatPage() {
         content: response.content,
         data: response.data,
       }
-      
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, assistantMessage])
       setIsLoading(false)
     }, 1200)
   }, [])
@@ -75,24 +55,51 @@ export default function ChatPage() {
   const hasMessages = messages.length > 0
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0C]">
+    <div className="flex h-screen bg-[#050508] overflow-hidden">
       <ChatSidebar />
-      
-      <main className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-6 py-4 border-b border-[#1C1C23]">
-          <span className="text-[13px] font-light tracking-[0.2em] text-white/90">
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top bar */}
+        <div
+          className="shrink-0 flex items-center justify-between px-5 py-3.5"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          {/* Model indicator */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-5 h-5 rounded-md flex items-center justify-center"
+              style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)" }}
+            >
+              <div className="w-2 h-2 rounded-full bg-[#C9A84C]" />
+            </div>
+            <span className="text-[13px] text-white/50 font-light">Maestro</span>
+            <span
+              className="text-[10px] text-white/20 px-1.5 py-0.5 rounded-md"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              Football Intelligence
+            </span>
+          </div>
+
+          {/* Mobile logo */}
+          <span className="lg:hidden text-[13px] font-semibold tracking-[0.25em] text-white">
             maestro
           </span>
-        </header>
 
-        {hasMessages ? (
-          <ChatMessages messages={messages} isLoading={isLoading} />
-        ) : (
-          <ChatEmptyState onPromptSelect={handleSendMessage} />
-        )}
+          {/* Right side placeholder */}
+          <div className="w-24" />
+        </div>
 
-        <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        {/* Chat area — scrollable, input pinned at bottom */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {hasMessages ? (
+            <ChatMessages messages={messages} isLoading={isLoading} />
+          ) : (
+            <ChatEmptyState onPromptSelect={handleSendMessage} />
+          )}
+
+          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        </div>
       </main>
     </div>
   )

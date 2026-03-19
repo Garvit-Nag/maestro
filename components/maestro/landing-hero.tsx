@@ -1,146 +1,345 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import dynamic from "next/dynamic"
+import { motion } from "framer-motion"
+import { tickerItems, heroContent } from "@/lib/content/landing"
 
-const tickerItems = [
-  "Live data from 150+ leagues",
-  "Player stats updated in real time",
-  "Ask in plain English",
-  "Powered by Gemini",
-  "Transfer news as it breaks",
-  "2,800+ teams tracked",
-  "250K+ player profiles",
+const Dither = dynamic(() => import("./dither"), { ssr: false })
+
+const EASE = [0.22, 1, 0.36, 1] as const
+
+const fadeUp = (delay: number) => ({
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: EASE, delay },
+})
+
+const mockScorers = [
+  { name: "E. Haaland", club: "Man City", goals: 24 },
+  { name: "M. Salah", club: "Liverpool", goals: 21 },
+  { name: "C. Palmer", club: "Chelsea", goals: 18 },
 ]
 
-const knowledgeItems = [
-  "Live scores & standings",
-  "Player stats & injuries",
-  "Transfers & team news",
+const stats = [
+  { value: "150+", label: "Leagues" },
+  { value: "250K+", label: "Players" },
+  { value: "Live", label: "Match data" },
 ]
 
 export function LandingHero() {
-  const [hoveredKnowledge, setHoveredKnowledge] = useState<number | null>(null)
-
   return (
-    <section className="relative min-h-screen flex flex-col bg-[#0A0A0C]">
-      {/* Background image with overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070')`,
-        }}
-      >
-        <div className="absolute inset-0 bg-[#0A0A0C]/[0.88]" />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-8 py-6 lg:px-16 lg:py-8">
-        <span className="text-[13px] font-light tracking-[0.2em] text-white/90">
-          maestro
-        </span>
-        <Link 
-          href="/chat" 
-          className="text-[13px] text-white/70 hover:text-white transition-colors relative group"
-        >
-          Enter
-          <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
-        </Link>
-      </header>
-
-      {/* Hero content */}
-      <div className="relative z-10 flex-1 flex items-center px-8 lg:px-16">
-        {/* Left content */}
-        <div className="max-w-3xl">
-          {/* Label */}
-          <span className="inline-block text-[11px] uppercase tracking-[0.3em] text-[#C9A84C] mb-6">
-            Football Intelligence
-          </span>
-          
-          {/* Headline */}
-          <h1 className="text-[clamp(48px,8vw,96px)] font-light leading-[1.05] text-white mb-6 text-balance">
-            The game,<br />understood.
-          </h1>
-          
-          {/* Subtext */}
-          <p className="text-base text-[#6B6B7A] mb-10">
-            Ask anything. Maestro knows.
-          </p>
-          
-          {/* CTA */}
-          <Link 
-            href="/chat"
-            className="inline-flex items-center text-[15px] text-white group relative"
-          >
-            <span>Begin</span>
-            <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
-            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[#C9A84C] group-hover:w-full transition-all duration-300" />
-          </Link>
+    <>
+      <section className="relative h-screen overflow-hidden flex flex-col bg-[#050508]">
+        {/* WebGL Dither background */}
+        <div className="absolute inset-0 z-0">
+          <Dither
+            waveColor={[0.14, 0.095, 0.02]}
+            waveSpeed={0.025}
+            waveFrequency={2.5}
+            waveAmplitude={0.38}
+            colorNum={5}
+            pixelSize={2}
+          />
         </div>
 
-        {/* Gold vertical line - shifted to 60% from left */}
-        <div className="hidden lg:block absolute left-[60%] top-1/2 -translate-y-1/2 w-px h-[120px] bg-[#C9A84C]" />
-
-        {/* Right side content */}
-        <div className="hidden lg:block absolute right-0 top-[45%] pr-8">
-          {/* Circle outline - 40% cropped off right edge */}
-          <div 
-            className="absolute -right-[112px] top-0 w-[280px] h-[280px] rounded-full border border-[#C9A84C]/[0.12]"
+        {/* Layered overlays for depth + readability */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#050508]/75 via-[#050508]/30 to-[#050508]/95" />
+        {/* Radial glow behind hero text */}
+        <div className="absolute inset-0 z-[1] pointer-events-none">
+          <div
+            className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full opacity-30"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(201,168,76,0.18) 0%, transparent 65%)",
+            }}
           />
-          
-          {/* Content positioned relative to circle */}
-          <div className="relative z-10 mr-8">
-            {/* Label with extending line - gold treatment like FOOTBALL INTELLIGENCE */}
-            <div className="flex items-center mb-6">
-              <span className="text-[11px] uppercase tracking-[0.3em] text-[#C9A84C]">
-                What Maestro Knows
+        </div>
+
+        {/* Navigation */}
+        <header className="relative z-10 flex items-center justify-between px-8 py-6 lg:px-16 lg:py-7">
+          {/* Logo */}
+          <motion.span
+            {...fadeUp(0)}
+            className="text-[13px] font-semibold tracking-[0.25em] text-white"
+          >
+            maestro
+          </motion.span>
+
+          {/* Center nav links */}
+          <motion.nav
+            {...fadeUp(0.05)}
+            className="hidden md:flex items-center gap-8"
+          >
+            {[
+              { label: "Features", href: "#capabilities" },
+              { label: "FAQ", href: "#faq" },
+              { label: "Try it", href: "/chat" },
+            ].map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-[13px] text-white/45 hover:text-white transition-colors duration-200 relative group"
+              >
+                {link.label}
+                <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[#C9A84C]/60 group-hover:w-full transition-all duration-300" />
+              </Link>
+            ))}
+          </motion.nav>
+
+          {/* Right CTA */}
+          <motion.div {...fadeUp(0.08)}>
+            <Link
+              href="/chat"
+              className="group flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition-colors duration-300 border border-white/[0.08] hover:border-[#C9A84C]/40 rounded-full px-5 py-2 backdrop-blur-sm bg-white/[0.03]"
+            >
+              Get started
+              <span className="transition-transform duration-300 group-hover:translate-x-0.5">
+                →
               </span>
-              <div className="ml-3 w-12 h-px bg-[#C9A84C]/40" />
-            </div>
-            
-            {/* Knowledge items - left aligned, readable */}
-            <div className="space-y-4">
-              {knowledgeItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center cursor-default"
-                  onMouseEnter={() => setHoveredKnowledge(index)}
-                  onMouseLeave={() => setHoveredKnowledge(null)}
+            </Link>
+          </motion.div>
+        </header>
+
+        {/* Hero body */}
+        <div className="relative z-10 flex-1 flex items-center pl-8 lg:pl-16 pr-0 gap-10 xl:gap-16">
+          {/* Left column */}
+          <div className="flex-1 max-w-2xl">
+            {/* Badge */}
+            <motion.div {...fadeUp(0.1)} className="flex items-center gap-2.5 mb-8">
+              <div className="relative flex items-center justify-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] block" />
+                <span className="absolute w-3 h-3 rounded-full bg-[#C9A84C]/30 animate-ping" />
+              </div>
+              <span className="text-[11px] uppercase tracking-[0.35em] text-[#C9A84C]">
+                {heroContent.label}
+              </span>
+            </motion.div>
+
+            {/* Headline */}
+            <div className="mb-7 overflow-hidden">
+              <motion.h1
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.18 }}
+                className="text-[clamp(52px,8vw,108px)] font-black leading-[0.95] tracking-tight text-white"
+              >
+                The game,
+                <br />
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #C9A84C 0%, #E8CB72 40%, #C9A84C 80%, #A87828 100%)",
+                  }}
                 >
-                  <span 
-                    className={`mr-3 text-[#C9A84C] text-sm transition-opacity duration-200 ${
-                      hoveredKnowledge === index ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    —
+                  understood.
+                </span>
+              </motion.h1>
+            </div>
+
+            {/* Subtext */}
+            <motion.p
+              {...fadeUp(0.35)}
+              className="text-[17px] text-white/60 mb-10 leading-relaxed max-w-md font-light"
+            >
+              Ask anything about football. Live data, instant answers — no filters, no
+              dropdowns, just intelligence.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div {...fadeUp(0.42)} className="flex items-center gap-4 mb-12">
+              <Link
+                href="/chat"
+                className="group relative inline-flex items-center gap-3 bg-[#C9A84C] hover:bg-[#D4B85C] text-[#050508] font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 overflow-hidden"
+                style={{
+                  boxShadow:
+                    "0 0 32px rgba(201,168,76,0.35), 0 2px 8px rgba(0,0,0,0.4)",
+                }}
+              >
+                <span className="relative z-10">Begin talking</span>
+                <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+                {/* Shimmer sweep on hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+              </Link>
+
+              <Link
+                href="#capabilities"
+                className="inline-flex items-center gap-2 text-[15px] text-white/50 hover:text-white/80 transition-colors duration-300 border border-white/[0.08] hover:border-white/20 rounded-xl px-6 py-3.5 backdrop-blur-sm bg-white/[0.03]"
+              >
+                See how it works
+              </Link>
+            </motion.div>
+
+            {/* Stat chips */}
+            <motion.div {...fadeUp(0.5)} className="flex items-center gap-3 flex-wrap">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center gap-2 border border-white/[0.08] rounded-full px-4 py-1.5 backdrop-blur-sm bg-white/[0.03]"
+                >
+                  <span className="text-[13px] font-semibold text-[#C9A84C]">
+                    {stat.value}
                   </span>
-                  <span 
-                    className={`text-[15px] font-light transition-colors duration-200 ${
-                      hoveredKnowledge === index ? 'text-white' : 'text-[#8A8A9A]'
-                    }`}
-                  >
-                    {item}
-                  </span>
+                  <span className="text-[11px] text-white/40">{stat.label}</span>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
 
-      {/* Ticker - fixed to bottom, contained within viewport */}
-      <div className="relative z-10 w-full bg-[#111116] border-t border-[#1C1C23] overflow-hidden shrink-0">
-        <div className="flex animate-ticker whitespace-nowrap py-4">
+          {/* Right column — floating chat preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 32, rotateY: -4 }}
+            animate={{ opacity: 1, y: 0, rotateY: 0 }}
+            transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}
+            className="hidden xl:block w-[360px] shrink-0 mr-8 lg:mr-16"
+            style={{ perspective: "1200px" }}
+          >
+            <div
+              className="relative rounded-2xl overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                backdropFilter: "blur(24px)",
+                boxShadow:
+                  "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.07)",
+              }}
+            >
+              {/* Gold top accent */}
+              <div
+                className="h-px"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(201,168,76,0.6), transparent)",
+                }}
+              />
+
+              <div className="p-5">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-5 h-5 rounded-full bg-[#C9A84C]/20 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#C9A84C]" />
+                  </div>
+                  <span className="text-[12px] text-white/50 tracking-wide">Maestro</span>
+                </div>
+
+                {/* User message */}
+                <div className="flex justify-end mb-4">
+                  <div
+                    className="rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%]"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <p className="text-[13px] text-white/90 leading-snug">
+                      Who&apos;s the top scorer in the Premier League this season?
+                    </p>
+                  </div>
+                </div>
+
+                {/* Maestro text response */}
+                <p className="text-[13px] text-white/70 leading-relaxed mb-4 font-light">
+                  Erling Haaland leads the Golden Boot race with{" "}
+                  <span className="text-white/90 font-medium">24 goals</span> in 28
+                  appearances — 0.86 per game.
+                </p>
+
+                {/* Mini data card */}
+                <div
+                  className="rounded-xl mb-4 overflow-hidden"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div
+                    className="h-px"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent)",
+                    }}
+                  />
+                  <div className="p-3">
+                    <p className="text-[9px] uppercase tracking-[0.25em] text-[#C9A84C] mb-2.5">
+                      Top Scorers · PL 24/25
+                    </p>
+                    <div className="space-y-1.5">
+                      {mockScorers.map((p, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-[10px] text-white/25 w-3">{i + 1}</span>
+                          <span className="text-[11px] text-white/80 flex-1 font-light">
+                            {p.name}
+                          </span>
+                          <span className="text-[10px] text-white/30">{p.club}</span>
+                          <span className="text-[12px] text-white font-semibold ml-1">
+                            {p.goals}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mock input */}
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <span className="text-[12px] text-white/20 flex-1">
+                    Ask about football...
+                  </span>
+                  <div
+                    className="w-5 h-5 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: "#C9A84C" }}
+                  >
+                    <span className="text-[10px] text-[#050508] font-bold">→</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Glow beneath card */}
+            <div
+              className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 rounded-full blur-2xl"
+              style={{ background: "rgba(201,168,76,0.12)" }}
+            />
+          </motion.div>
+        </div>
+
+        {/* Scroll cue */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="relative z-10 flex justify-center pb-8"
+        >
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/20">
+              scroll
+            </span>
+            <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Ticker — below the fold */}
+      <div className="w-full bg-[#0D0D10] border-t border-white/[0.05] overflow-hidden">
+        <div className="flex animate-ticker whitespace-nowrap py-3.5">
           {[...tickerItems, ...tickerItems].map((item, i) => (
             <div key={i} className="flex items-center shrink-0">
-              <span className="text-xs text-[#6B6B7A] px-6">
-                {item}
-              </span>
-              <span className="text-[10px] text-[#3A3A48]">·</span>
+              <span className="text-[11px] text-white/25 px-6 tracking-wide">{item}</span>
+              <span className="text-[10px] text-white/10">·</span>
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </>
   )
 }
