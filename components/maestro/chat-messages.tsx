@@ -1,6 +1,12 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
+import {
+  placeholderStandings,
+  placeholderLineup,
+  placeholderStats,
+} from "@/lib/content/chat"
 
 export interface Message {
   id: string
@@ -26,40 +32,116 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
   }, [messages, isLoading])
 
   return (
-    <div className="flex-1 overflow-y-auto maestro-scrollbar px-8 lg:px-16 py-8">
-      <div className="max-w-3xl space-y-8">
+    <div className="flex-1 overflow-y-auto maestro-scrollbar py-8 px-4">
+      {/* Centered message column — same width constraint as input */}
+      <div className="max-w-2xl mx-auto space-y-6">
         {messages.map((message) => (
-          <div
+          <motion.div
             key={message.id}
-            className={`${
-              message.role === "user" 
-                ? "ml-auto text-right max-w-[60%]" 
-                : "mr-auto max-w-[80%]"
-            }`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }}
           >
-            <p className={`text-[15px] leading-relaxed ${
-              message.role === "user" ? "text-white" : "text-white/90"
-            }`}>
-              {message.content}
-            </p>
-            
-            {/* Data card if present */}
-            {message.data && (
-              <div className="mt-4 bg-[#111116] border border-[#1C1C23] rounded-lg p-4 text-left">
-                <DataCard data={message.data} />
+            {message.role === "user" ? (
+              /* User message — right-aligned bubble */
+              <div className="flex justify-end">
+                <div
+                  className="max-w-[75%] rounded-2xl rounded-br-sm px-4 py-3"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                  }}
+                >
+                  <p className="text-[15px] text-white/90 font-light leading-relaxed">
+                    {message.content}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Assistant message — left-aligned, no bubble */
+              <div className="flex gap-3">
+                {/* Avatar */}
+                <div className="shrink-0 mt-0.5">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: "rgba(201,168,76,0.12)",
+                      border: "1px solid rgba(201,168,76,0.2)",
+                    }}
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" />
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-white/30 mb-2 font-medium tracking-wide">
+                    Maestro
+                  </p>
+                  <p className="text-[15px] text-white/80 font-light leading-relaxed mb-0">
+                    {message.content}
+                  </p>
+
+                  {/* Data card */}
+                  {message.data && (
+                    <div
+                      className="mt-4 rounded-xl overflow-hidden"
+                      style={{
+                        background: "rgba(255,255,255,0.025)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div
+                        className="h-px"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent)",
+                        }}
+                      />
+                      <div className="p-4">
+                        <DataCard data={message.data} />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
 
-        {/* Loading skeleton */}
+        {/* Loading state */}
         {isLoading && (
-          <div className="mr-auto max-w-[80%]">
-            <div className="space-y-3">
-              <div className="h-4 w-3/4 bg-[#1C1C23] rounded animate-shimmer" />
-              <div className="h-4 w-1/2 bg-[#1C1C23] rounded animate-shimmer" />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-3"
+          >
+            <div className="shrink-0 mt-0.5">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{
+                  background: "rgba(201,168,76,0.12)",
+                  border: "1px solid rgba(201,168,76,0.2)",
+                }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-[#C9A84C] animate-pulse" />
+              </div>
             </div>
-          </div>
+            <div className="flex-1 pt-1">
+              <p className="text-[12px] text-white/30 mb-3 font-medium tracking-wide">
+                Maestro
+              </p>
+              {/* Thinking dots */}
+              <div className="flex gap-1.5 items-center h-5">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
         )}
 
         <div ref={bottomRef} />
@@ -70,44 +152,38 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
 
 function DataCard({ data }: { data: Message["data"] }) {
   if (!data) return null
-
   switch (data.type) {
-    case "standings":
-      return <StandingsCard />
-    case "lineup":
-      return <LineupCard />
-    case "stats":
-      return <StatsCard />
-    default:
-      return null
+    case "standings": return <StandingsCard />
+    case "lineup": return <LineupCard />
+    case "stats": return <StatsCard />
+    default: return null
   }
 }
 
 function StandingsCard() {
-  const teams = [
-    { pos: 1, name: "Arsenal", played: 28, gd: "+42", points: 67 },
-    { pos: 2, name: "Liverpool", played: 28, gd: "+38", points: 65 },
-    { pos: 3, name: "Man City", played: 28, gd: "+35", points: 62 },
-    { pos: 4, name: "Aston Villa", played: 28, gd: "+18", points: 55 },
-    { pos: 5, name: "Tottenham", played: 28, gd: "+12", points: 50 },
-  ]
-
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[#C9A84C] mb-4">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
         Premier League Standings
       </p>
-      <div className="space-y-2">
-        {teams.map((team) => (
-          <div 
-            key={team.pos} 
-            className="flex items-center text-[13px] py-2 border-l-2 border-transparent hover:border-[#C9A84C] hover:bg-[#1C1C23]/50 px-3 -mx-3 transition-colors"
+      <div className="space-y-0">
+        <div className="flex items-center text-[10px] text-white/20 uppercase tracking-wider px-2 pb-2">
+          <span className="w-6">#</span>
+          <span className="flex-1">Club</span>
+          <span className="w-8 text-center">MP</span>
+          <span className="w-10 text-center">GD</span>
+          <span className="w-8 text-right">Pts</span>
+        </div>
+        {placeholderStandings.map((team) => (
+          <div
+            key={team.pos}
+            className="flex items-center text-[13px] py-2 px-2 rounded-lg hover:bg-white/[0.04] transition-colors cursor-default"
           >
-            <span className="w-6 text-[#4A4A58]">{team.pos}</span>
-            <span className="flex-1 text-white">{team.name}</span>
-            <span className="w-8 text-center text-[#4A4A58]">{team.played}</span>
-            <span className="w-12 text-center text-[#4A4A58]">{team.gd}</span>
-            <span className="w-8 text-right text-white font-medium">{team.points}</span>
+            <span className="w-6 text-white/20 text-[12px]">{team.pos}</span>
+            <span className="flex-1 text-white/75 font-light">{team.name}</span>
+            <span className="w-8 text-center text-white/25 text-[12px]">{team.played}</span>
+            <span className="w-10 text-center text-white/25 text-[12px]">{team.gd}</span>
+            <span className="w-8 text-right text-white font-semibold">{team.points}</span>
           </div>
         ))}
       </div>
@@ -118,22 +194,29 @@ function StandingsCard() {
 function LineupCard() {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[#C9A84C] mb-4">
-        Predicted Lineup
+      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
+        {placeholderLineup.cardTitle}
       </p>
-      <div className="grid grid-cols-2 gap-4 text-[13px]">
-        <div>
-          <p className="text-[#4A4A58] mb-2">Starting XI</p>
-          <div className="space-y-1">
-            <p className="text-white/90">Raya</p>
-            <p className="text-white/90">White, Saliba, Gabriel, Zinchenko</p>
-            <p className="text-white/90">Rice, Odegaard, Havertz</p>
-            <p className="text-white/90">Saka, Jesus, Martinelli</p>
+      <div className="flex gap-8">
+        <div className="flex-1">
+          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-3">
+            {placeholderLineup.teamLabel}
+          </p>
+          <div className="space-y-1.5">
+            {placeholderLineup.startingXI.map((line, i) => (
+              <p key={i} className="text-[13px] text-white/65 font-light leading-relaxed">
+                {line}
+              </p>
+            ))}
           </div>
         </div>
         <div>
-          <p className="text-[#4A4A58] mb-2">Formation</p>
-          <p className="text-white/90">4-3-3</p>
+          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-3">
+            {placeholderLineup.formationLabel}
+          </p>
+          <p className="text-[24px] font-black text-white tracking-widest">
+            {placeholderLineup.formation}
+          </p>
         </div>
       </div>
     </div>
@@ -141,23 +224,23 @@ function LineupCard() {
 }
 
 function StatsCard() {
-  const stats = [
-    { label: "Goals", value: "18" },
-    { label: "Assists", value: "6" },
-    { label: "Matches", value: "24" },
-    { label: "Minutes", value: "2,160" },
-  ]
-
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[#C9A84C] mb-4">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
         Player Stats
       </p>
-      <div className="grid grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label}>
-            <p className="text-2xl font-light text-white mb-1">{stat.value}</p>
-            <p className="text-[11px] text-[#4A4A58]">{stat.label}</p>
+      <div className="grid grid-cols-4 gap-2.5">
+        {placeholderStats.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl p-3"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <p className="text-xl font-black text-white leading-none mb-1.5">{stat.value}</p>
+            <p className="text-[10px] text-white/30 uppercase tracking-wide">{stat.label}</p>
           </div>
         ))}
       </div>

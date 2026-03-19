@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/garvi/Desktop/maestro -not -path */node_modules/* -not -path */.next/* -not -path */.git/* -type f)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(npx next:*)"
+    ]
+  }
+}
