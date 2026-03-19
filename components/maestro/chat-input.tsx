@@ -6,9 +6,10 @@ import { inputContent } from "@/lib/content/chat"
 interface ChatInputProps {
   onSend: (message: string) => void
   disabled?: boolean
+  hint?: string
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, hint }: ChatInputProps) {
   const [value, setValue] = useState("")
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -99,9 +100,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         </form>
 
         {/* Hint */}
-        <p className="text-center text-[11px] text-white/15 mt-2.5">
-          Press <kbd className="text-white/25">Enter</kbd> to send · <kbd className="text-white/25">Shift+Enter</kbd> for new line
-        </p>
+        <div className="text-center mt-2.5 space-y-1">
+          {hint && (
+            <p className="text-[11px] text-[#C9A84C]/40">{hint}</p>
+          )}
+          <p className="text-[11px] text-white/15">
+            Press <kbd className="text-white/25">Enter</kbd> to send · <kbd className="text-white/25">Shift+Enter</kbd> for new line
+          </p>
+        </div>
       </div>
     </div>
   )

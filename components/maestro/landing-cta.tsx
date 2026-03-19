@@ -1,13 +1,14 @@
 "use client"
 
-import Link from "next/link"
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { ctaContent } from "@/lib/content/landing"
+import { useAuthModal } from "@/lib/auth-modal-context"
 
 export function LandingCTA() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: "-60px" })
+  const { openAuthModal } = useAuthModal()
 
   return (
     <section
@@ -49,8 +50,8 @@ export function LandingCTA() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, delay: 0.15 }}
         >
-          <Link
-            href="/chat"
+          <button
+            onClick={openAuthModal}
             className="group relative inline-flex items-center gap-3 font-bold text-[16px] text-[#050508] px-10 py-4 rounded-xl overflow-hidden transition-all duration-300"
             style={{
               background:
@@ -66,7 +67,7 @@ export function LandingCTA() {
             </span>
             {/* Shimmer */}
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-600" />
-          </Link>
+          </button>
         </motion.div>
       </div>
     </section>

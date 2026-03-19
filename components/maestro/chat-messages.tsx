@@ -2,40 +2,59 @@
 
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import {
-  placeholderStandings,
-  placeholderLineup,
-  placeholderStats,
-} from "@/lib/content/chat"
+import { ComponentRenderer } from "@/components/football/component-renderer"
 
 export interface Message {
   id: string
   role: "user" | "assistant"
   content: string
-  data?: {
-    type: "standings" | "lineup" | "stats"
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload?: any
-  }
+  components?: Array<{ type: string; data: unknown }>
+  suggest_new_chat?: boolean
 }
 
 interface ChatMessagesProps {
   messages: Message[]
   isLoading?: boolean
+  onNewChat?: () => void
 }
 
-export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+function normalizeMessage(message: Message): Message {
+  if (message.role !== "assistant") return message
+  const c = message.content.trim()
+  if (!c.startsWith("{")) return message
+  try {
+    const parsed = JSON.parse(c)
+    if (typeof parsed.text === "string") {
+      return {
+        ...message,
+        content: parsed.text,
+        components: message.components?.length
+          ? message.components
+          : parsed.components ?? [],
+      }
+    }
+  } catch {}
+  return message
+}
+
+export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, isLoading])
 
+  // Check if any message suggests new chat
+  const lastMessage = messages[messages.length - 1]
+  const showNewChatBanner = lastMessage?.suggest_new_chat
+
   return (
     <div className="flex-1 overflow-y-auto maestro-scrollbar py-8 px-4">
       {/* Centered message column — same width constraint as input */}
       <div className="max-w-2xl mx-auto space-y-6">
-        {messages.map((message) => (
+        {messages.map((rawMessage) => {
+          const message = normalizeMessage(rawMessage)
+          return (
           <motion.div
             key={message.id}
             initial={{ opacity: 0, y: 10 }}
@@ -58,7 +77,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
                 </div>
               </div>
             ) : (
-              /* Assistant message — left-aligned, no bubble */
+              /* Assistant message — left-aligned */
               <div className="flex gap-3">
                 {/* Avatar */}
                 <div className="shrink-0 mt-0.5">
@@ -77,36 +96,49 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
                   <p className="text-[12px] text-white/30 mb-2 font-medium tracking-wide">
                     Maestro
                   </p>
-                  <p className="text-[15px] text-white/80 font-light leading-relaxed mb-0">
+                  <p className="text-[15px] text-white/80 font-light leading-relaxed">
                     {message.content}
                   </p>
 
-                  {/* Data card */}
-                  {message.data && (
-                    <div
-                      className="mt-4 rounded-xl overflow-hidden"
-                      style={{
-                        background: "rgba(255,255,255,0.025)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                      }}
-                    >
-                      <div
-                        className="h-px"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent)",
-                        }}
-                      />
-                      <div className="p-4">
-                        <DataCard data={message.data} />
-                      </div>
-                    </div>
-                  )}
+                  {/* Data components */}
+                  {message.components?.map((component, idx) => (
+                    <ComponentRenderer
+                      key={idx}
+                      type={component.type}
+                      data={component.data}
+                    />
+                  ))}
                 </div>
               </div>
             )}
           </motion.div>
-        ))}
+          )
+        })}
+
+        {/* Long conversation nudge */}
+        {showNewChatBanner && onNewChat && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center"
+          >
+            <div
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px]"
+              style={{
+                background: "rgba(201,168,76,0.06)",
+                border: "1px solid rgba(201,168,76,0.2)",
+              }}
+            >
+              <span className="text-white/50">Long conversation — start fresh for best results</span>
+              <button
+                onClick={onNewChat}
+                className="text-[#C9A84C] font-medium hover:text-[#D4B85C] transition-colors"
+              >
+                New chat →
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Loading state */}
         {isLoading && (
@@ -145,104 +177,6 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
         )}
 
         <div ref={bottomRef} />
-      </div>
-    </div>
-  )
-}
-
-function DataCard({ data }: { data: Message["data"] }) {
-  if (!data) return null
-  switch (data.type) {
-    case "standings": return <StandingsCard />
-    case "lineup": return <LineupCard />
-    case "stats": return <StatsCard />
-    default: return null
-  }
-}
-
-function StandingsCard() {
-  return (
-    <div>
-      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
-        Premier League Standings
-      </p>
-      <div className="space-y-0">
-        <div className="flex items-center text-[10px] text-white/20 uppercase tracking-wider px-2 pb-2">
-          <span className="w-6">#</span>
-          <span className="flex-1">Club</span>
-          <span className="w-8 text-center">MP</span>
-          <span className="w-10 text-center">GD</span>
-          <span className="w-8 text-right">Pts</span>
-        </div>
-        {placeholderStandings.map((team) => (
-          <div
-            key={team.pos}
-            className="flex items-center text-[13px] py-2 px-2 rounded-lg hover:bg-white/[0.04] transition-colors cursor-default"
-          >
-            <span className="w-6 text-white/20 text-[12px]">{team.pos}</span>
-            <span className="flex-1 text-white/75 font-light">{team.name}</span>
-            <span className="w-8 text-center text-white/25 text-[12px]">{team.played}</span>
-            <span className="w-10 text-center text-white/25 text-[12px]">{team.gd}</span>
-            <span className="w-8 text-right text-white font-semibold">{team.points}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function LineupCard() {
-  return (
-    <div>
-      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
-        {placeholderLineup.cardTitle}
-      </p>
-      <div className="flex gap-8">
-        <div className="flex-1">
-          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-3">
-            {placeholderLineup.teamLabel}
-          </p>
-          <div className="space-y-1.5">
-            {placeholderLineup.startingXI.map((line, i) => (
-              <p key={i} className="text-[13px] text-white/65 font-light leading-relaxed">
-                {line}
-              </p>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-3">
-            {placeholderLineup.formationLabel}
-          </p>
-          <p className="text-[24px] font-black text-white tracking-widest">
-            {placeholderLineup.formation}
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function StatsCard() {
-  return (
-    <div>
-      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C9A84C] mb-4">
-        Player Stats
-      </p>
-      <div className="grid grid-cols-4 gap-2.5">
-        {placeholderStats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl p-3"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            <p className="text-xl font-black text-white leading-none mb-1.5">{stat.value}</p>
-            <p className="text-[10px] text-white/30 uppercase tracking-wide">{stat.label}</p>
-          </div>
-        ))}
       </div>
     </div>
   )
