@@ -4,6 +4,7 @@ import Link from "next/link"
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { tickerItems, heroContent } from "@/lib/content/landing"
+import { useAuthModal } from "@/lib/auth-modal-context"
 
 const Dither = dynamic(() => import("./dither"), { ssr: false })
 
@@ -28,6 +29,7 @@ const stats = [
 ]
 
 export function LandingHero() {
+  const { openAuthModal } = useAuthModal()
   return (
     <>
       <section className="relative h-screen overflow-hidden flex flex-col bg-[#050508]">
@@ -74,7 +76,6 @@ export function LandingHero() {
             {[
               { label: "Features", href: "#capabilities" },
               { label: "FAQ", href: "#faq" },
-              { label: "Try it", href: "/chat" },
             ].map((link) => (
               <Link
                 key={link.label}
@@ -85,19 +86,26 @@ export function LandingHero() {
                 <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[#C9A84C]/60 group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
+            <button
+              onClick={openAuthModal}
+              className="text-[13px] text-white/45 hover:text-white transition-colors duration-200 relative group"
+            >
+              Try it
+              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[#C9A84C]/60 group-hover:w-full transition-all duration-300" />
+            </button>
           </motion.nav>
 
           {/* Right CTA */}
           <motion.div {...fadeUp(0.08)}>
-            <Link
-              href="/chat"
+            <button
+              onClick={openAuthModal}
               className="group flex items-center gap-2 text-[13px] text-white/70 hover:text-white transition-colors duration-300 border border-white/[0.08] hover:border-[#C9A84C]/40 rounded-full px-5 py-2 backdrop-blur-sm bg-white/[0.03]"
             >
               Get started
               <span className="transition-transform duration-300 group-hover:translate-x-0.5">
                 →
               </span>
-            </Link>
+            </button>
           </motion.div>
         </header>
 
@@ -149,8 +157,8 @@ export function LandingHero() {
 
             {/* CTAs */}
             <motion.div {...fadeUp(0.42)} className="flex items-center gap-4 mb-12">
-              <Link
-                href="/chat"
+              <button
+                onClick={openAuthModal}
                 className="group relative inline-flex items-center gap-3 bg-[#C9A84C] hover:bg-[#D4B85C] text-[#050508] font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 overflow-hidden"
                 style={{
                   boxShadow:
@@ -163,7 +171,7 @@ export function LandingHero() {
                 </span>
                 {/* Shimmer sweep on hover */}
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-              </Link>
+              </button>
 
               <Link
                 href="#capabilities"

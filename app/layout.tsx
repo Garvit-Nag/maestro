@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthModalProvider } from "@/lib/auth-modal-context"
+import { AuthModal } from "@/components/maestro/auth-modal"
 import './globals.css'
 
 const inter = Inter({ 
@@ -42,7 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased bg-[#0A0A0C] text-white`}>
-        {children}
+        <AuthModalProvider>
+          {children}
+          <AuthModal />
+        </AuthModalProvider>
         <Analytics />
       </body>
     </html>

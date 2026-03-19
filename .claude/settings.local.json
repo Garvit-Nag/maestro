@@ -6,7 +6,15 @@
       "Bash(npm install:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(ls -lh *.docx)",
+      "Bash(find /c/Users/garvi/Desktop/maestro/components/maestro -type f -name *.tsx)",
+      "Bash(unzip -p assignment.docx word/document.xml)",
+      "Bash(unzip -p base.docx word/document.xml)",
+      "Bash(unzip -p C:UsersgarviDesktopmaestrobase.docx word/document.xml)",
+      "Bash(unzip -p C:UsersgarviDesktopmaestroassignment.docx word/document.xml)",
+      "Bash(sed 's/<[^>]*>//g')",
+      "Bash(grep -v '^[[:space:]]*$')"
     ]
   }
 }
