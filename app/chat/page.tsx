@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, Suspense } from "react"
+import { GiSoccerBall } from "react-icons/gi"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ChatSidebar } from "@/components/maestro/chat-sidebar"
 import { ChatEmptyState } from "@/components/maestro/chat-empty-state"
@@ -8,21 +9,6 @@ import { ChatMessages, Message } from "@/components/maestro/chat-messages"
 import { ChatInput } from "@/components/maestro/chat-input"
 import { OnboardingModal } from "@/components/maestro/onboarding-modal"
 import { createClient } from "@/lib/supabase"
-
-// Ghost intro exchange shown on first visit
-const INTRO_MESSAGES: Message[] = [
-  {
-    id: "intro-user",
-    role: "user",
-    content: "Who's leading the Premier League golden boot this season?",
-  },
-  {
-    id: "intro-bot",
-    role: "assistant",
-    content: "Erling Haaland is the benchmark. Ask me anything — live standings, player stats, fixtures, transfers.",
-    components: [],
-  },
-]
 
 function ChatPageInner() {
   const router = useRouter()
@@ -33,7 +19,6 @@ function ChatPageInner() {
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(conversationIdParam)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [hasSeenIntro, setHasSeenIntro] = useState(true)
   const [isInitializing, setIsInitializing] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -51,12 +36,11 @@ function ChatPageInner() {
 
       const { data: prefs } = await supabase
         .from("user_preferences")
-        .select("has_completed_onboarding, has_seen_intro")
+        .select("has_completed_onboarding")
         .eq("user_id", user.id)
         .single()
 
       if (!prefs || !prefs.has_completed_onboarding) setShowOnboarding(true)
-      if (prefs && !prefs.has_seen_intro) setHasSeenIntro(false)
 
       setIsInitializing(false)
     }
@@ -93,26 +77,13 @@ function ChatPageInner() {
   }, [conversationIdParam])
 
   const handleSendMessage = useCallback(async (content: string) => {
-    // If showing intro, clear it
-    setHasSeenIntro(true)
-    if (userId) {
-      supabase
-        .from("user_preferences")
-        .upsert({ user_id: userId, has_seen_intro: true })
-        .then(() => {})
-    }
-
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content,
     }
 
-    setMessages((prev) => {
-      // Remove intro messages if present
-      const filtered = prev.filter((m) => !m.id.startsWith("intro-"))
-      return [...filtered, userMessage]
-    })
+    setMessages((prev) => [...prev, userMessage])
     setIsLoading(true)
 
     try {
@@ -170,8 +141,7 @@ function ChatPageInner() {
     setShowOnboarding(false)
   }, [])
 
-  const displayMessages = hasSeenIntro ? messages : [...INTRO_MESSAGES, ...messages]
-  const hasMessages = displayMessages.length > 0
+  const hasMessages = messages.length > 0
 
   if (isInitializing) {
     return (
@@ -207,7 +177,7 @@ function ChatPageInner() {
                 className="w-5 h-5 rounded-md flex items-center justify-center"
                 style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)" }}
               >
-                <div className="w-2 h-2 rounded-full bg-[#C9A84C]" />
+                <GiSoccerBall className="w-3 h-3 text-[#C9A84C]" />
               </div>
               <span className="text-[13px] text-white/50 font-light">Maestro</span>
               <span
@@ -229,7 +199,7 @@ function ChatPageInner() {
           <div className="flex-1 flex flex-col min-h-0">
             {hasMessages ? (
               <ChatMessages
-                messages={displayMessages}
+                messages={messages}
                 isLoading={isLoading}
                 onNewChat={handleNewChat}
               />
@@ -240,7 +210,6 @@ function ChatPageInner() {
             <ChatInput
               onSend={handleSendMessage}
               disabled={isLoading}
-              hint={!hasSeenIntro && !hasMessages ? "Maestro pulls live data from 18+ football sources" : undefined}
             />
           </div>
         </main>
@@ -264,3 +233,4 @@ export default function ChatPage() {
     </Suspense>
   )
 }
+

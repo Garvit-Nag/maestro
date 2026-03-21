@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { GiSoccerBall } from "react-icons/gi"
 import { createClient } from "@/lib/supabase"
 import { useAuthModal } from "@/lib/auth-modal-context"
 
@@ -105,7 +106,7 @@ export function AuthModal() {
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)" }}
               >
-                <div className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" />
+                <GiSoccerBall className="w-3.5 h-3.5 text-[#C9A84C]" />
               </div>
               <span className="text-[13px] font-semibold tracking-[0.25em] text-white">maestro</span>
             </div>
