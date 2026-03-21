@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase"
 import { Check, Search } from "lucide-react"
+import { LEAGUES } from "@/lib/content/leagues"
 
 interface Team {
   id: number
@@ -11,57 +12,6 @@ interface Team {
   shortName: string
   crestUrl: string
 }
-
-const LEAGUES = [
-  {
-    id: "4328",
-    name: "Premier League",
-    country: "England",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/i6o0kh1549879062.png",
-  },
-  {
-    id: "4335",
-    name: "La Liga",
-    country: "Spain",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/7onmyv1534768460.png",
-  },
-  {
-    id: "4331",
-    name: "Bundesliga",
-    country: "Germany",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/0j55yv1534764799.png",
-  },
-  {
-    id: "4332",
-    name: "Serie A",
-    country: "Italy",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/cjqj3j1473944978.png",
-  },
-  {
-    id: "4334",
-    name: "Ligue 1",
-    country: "France",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/rutpay1473943721.png",
-  },
-  {
-    id: "4480",
-    name: "UEFA Champions League",
-    country: "Europe",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/qywjqy1534768460.png",
-  },
-  {
-    id: "4337",
-    name: "Eredivisie",
-    country: "Netherlands",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/uyyuxn1534768460.png",
-  },
-  {
-    id: "4344",
-    name: "Primeira Liga",
-    country: "Portugal",
-    badge: "https://www.thesportsdb.com/images/media/league/badge/7p1eld1534768795.png",
-  },
-]
 
 interface OnboardingModalProps {
   onComplete: () => void
@@ -194,7 +144,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     placeholder="Search teams..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/25 focus:outline-none"
+                    className="flex-1 bg-transparent text-[13px] text-white placeholder:text-white/25 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A84C]/30 rounded"
                   />
                 </div>
 
@@ -295,15 +245,17 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                             border: isSelected ? "1px solid rgba(201,168,76,0.4)" : "1px solid rgba(255,255,255,0.07)",
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={league.badge}
-                            alt={league.name}
-                            className="w-8 h-8 object-contain shrink-0"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
-                            }}
-                          />
+                          <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-white/90 rounded-full p-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={league.badge}
+                              alt={league.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
+                              }}
+                            />
+                          </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[12px] text-white/80 font-medium truncate">{league.name}</p>
                             <p className="text-[10px] text-white/30">{league.country}</p>

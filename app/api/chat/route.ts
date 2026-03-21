@@ -87,11 +87,24 @@ export async function POST(request: NextRequest) {
       { role: "model", parts: [{ text: '{"text":"Ready. Ask me anything about football.","components":[]}' }] },
     ]
 
-    const conversationHistory: Content[] = (historyRows ?? []).slice(0, -1).map((row) => ({
-      role: row.role === "user" ? "user" : "model",
-      // Truncate assistant messages — full text causes Gemini to repeat previous tool calls
-      parts: [{ text: row.role === "user" ? row.content : row.content.slice(0, 120) }],
-    }))
+    // Only include user messages in history — including assistant messages (even truncated)
+    // causes Gemini to repeat tool calls and merge previous responses into new ones
+    const userOnlyHistory: Content[] = (historyRows ?? []).slice(0, -1)
+      .filter((row) => row.role === "user")
+      .map((row) => ({
+        role: "user" as const,
+        parts: [{ text: row.content }],
+      }))
+
+    // Interleave synthetic model acknowledgments so Gemini sees valid alternating turns
+    const conversationHistory: Content[] = []
+    for (const entry of userOnlyHistory) {
+      conversationHistory.push(entry)
+      conversationHistory.push({
+        role: "model",
+        parts: [{ text: '{"text":"Got it.","components":[]}' }],
+      })
+    }
 
     const history: Content[] = [...HISTORY_PRIMER, ...conversationHistory]
 
@@ -114,39 +127,28 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Send message and handle tool calls
-    console.log("\n=== CHAT REQUEST ===")
-    console.log("User message:", message)
+    console.log(`[chat] user=${userId} msg="${message.slice(0, 60)}"`);
 
     let chat = model.startChat({ history })
     let result = await chat.sendMessage(message)
 
-    // Retry once if Gemini returns completely empty — happens non-deterministically
     if (!result.response.text() && !result.response.functionCalls()?.length) {
-      console.log("Empty response from Gemini — retrying once")
       chat = model.startChat({ history })
       result = await chat.sendMessage(message)
     }
 
     let iterations = 0
 
-    // Track every tool result so we can inject data server-side
     const calledTools: Array<{ name: string; data: unknown }> = []
-
-    console.log("--- Gemini initial response ---")
-    console.log("Function calls:", JSON.stringify(result.response.functionCalls(), null, 2))
 
     while (result.response.functionCalls()?.length && iterations < 5) {
       iterations++
       const calls = result.response.functionCalls()!
-      console.log(`\n--- Tool call round ${iterations} ---`)
-      console.log("Tools requested:", calls.map(c => `${c.name}(${JSON.stringify(c.args)})`).join(", "))
 
       const toolResponses: FunctionResponsePart[] = await Promise.all(
         calls.map(async (call) => {
           const toolResult = await executeTool(call.name, call.args as Record<string, string>)
           calledTools.push({ name: call.name, data: toolResult })
-          console.log(`Tool [${call.name}] result (truncated):`, JSON.stringify(toolResult)?.substring(0, 200))
           return {
             functionResponse: {
               name: call.name,
@@ -157,8 +159,6 @@ export async function POST(request: NextRequest) {
       )
 
       result = await chat.sendMessage(toolResponses)
-      console.log(`Gemini response after round ${iterations}:`)
-      console.log("  Function calls:", JSON.stringify(result.response.functionCalls(), null, 2))
     }
 
     // Map component type → which tool names supply its data
@@ -184,19 +184,13 @@ export async function POST(request: NextRequest) {
       weekend_fixture_board:["get_fixtures"],
     }
 
-    // Parse final response — Gemini now only returns text + component types (no data)
     const rawText = result.response.text()
-    console.log("\n--- Final raw text from Gemini ---")
-    console.log("Length:", rawText.length)
-    console.log("First 300 chars:", JSON.stringify(rawText.substring(0, 300)))
     let parsed: { text: string; components: Array<{ type: string; data: unknown }> }
 
     function extractParsed(raw: string) {
       const cleaned = raw.replace(/^\uFEFF/, "").trim()
       // 1. Direct parse
-      try { return JSON.parse(cleaned) } catch (e) {
-        console.log("Direct parse failed:", (e as Error).message.substring(0, 100))
-      }
+      try { return JSON.parse(cleaned) } catch {}
       // 2. Code block
       const codeBlock = cleaned.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/)
       if (codeBlock) {
@@ -206,14 +200,24 @@ export async function POST(request: NextRequest) {
       const start = cleaned.indexOf("{")
       const end = cleaned.lastIndexOf("}")
       if (start !== -1 && end > start) {
-        try { return JSON.parse(cleaned.slice(start, end + 1)) } catch (e) {
-          console.log("Slice parse failed:", (e as Error).message.substring(0, 100))
-        }
+        try { return JSON.parse(cleaned.slice(start, end + 1)) } catch {}
       }
       return null
     }
 
     const extracted = extractParsed(rawText)
+
+    /** Returns true if tool data is an error or effectively empty */
+    function isErroredOrEmpty(data: unknown): boolean {
+      if (data == null) return true
+      if (typeof data === "object" && !Array.isArray(data)) {
+        const obj = data as Record<string, unknown>
+        if ("error" in obj) return true
+        if (Object.keys(obj).length === 0) return true
+      }
+      if (Array.isArray(data) && data.length === 0) return true
+      return false
+    }
 
     if (extracted && typeof extracted.text === "string") {
       // Inject real tool data into each component — Gemini only told us the type
@@ -252,21 +256,19 @@ export async function POST(request: NextRequest) {
               : Object.fromEntries(matches.map(t => [t.name, t.data]))
           return { type: comp.type, data: injectedData }
         }
-      )
+      ).filter((comp: { type: string; data: unknown }) => !isErroredOrEmpty(comp.data))
       parsed = { text: extracted.text, components: enrichedComponents }
-      console.log("Parse path: SUCCESS")
     } else {
       // Fallback: plain text, surface whatever tool data we got as components
       const textOnly = rawText.replace(/```(?:json)?/g, "").replace(/```/g, "").trim()
-      const fallbackComponents = calledTools.map(t => {
-        const compType = Object.entries(COMPONENT_TOOL_MAP).find(([, tools]) => tools.includes(t.name))?.[0]
-        return compType ? { type: compType, data: t.data } : null
-      }).filter(Boolean) as Array<{ type: string; data: unknown }>
+      const fallbackComponents = calledTools
+        .filter((t) => !isErroredOrEmpty(t.data))
+        .map(t => {
+          const compType = Object.entries(COMPONENT_TOOL_MAP).find(([, tools]) => tools.includes(t.name))?.[0]
+          return compType ? { type: compType, data: t.data } : null
+        }).filter(Boolean) as Array<{ type: string; data: unknown }>
       parsed = { text: textOnly, components: fallbackComponents }
-      console.log("Parse path: FALLBACK — using calledTools to build components")
     }
-    console.log("Final parsed.text:", parsed.text)
-    console.log("Components injected:", parsed.components.map(c => c.type))
 
     // Save assistant message
     await supabase.from("messages").insert({

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
+import { GiSoccerBall } from "react-icons/gi"
 import { ComponentRenderer } from "@/components/football/component-renderer"
 
 export interface Message {
@@ -88,7 +89,7 @@ export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesPro
                       border: "1px solid rgba(201,168,76,0.2)",
                     }}
                   >
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C9A84C]" />
+                    <GiSoccerBall className="w-3.5 h-3.5 text-[#C9A84C]" />
                   </div>
                 </div>
 
@@ -155,7 +156,7 @@ export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesPro
                   border: "1px solid rgba(201,168,76,0.2)",
                 }}
               >
-                <div className="w-2.5 h-2.5 rounded-full bg-[#C9A84C] animate-pulse" />
+                <GiSoccerBall className="w-3.5 h-3.5 text-[#C9A84C] animate-pulse" />
               </div>
             </div>
             <div className="flex-1 pt-1">

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { LayoutList, Trophy, BarChart2, ArrowLeftRight } from "lucide-react"
+import { GiSoccerBall } from "react-icons/gi"
 import { suggestedPrompts } from "@/lib/content/chat"
 
 interface ChatEmptyStateProps {
@@ -29,7 +30,7 @@ export function ChatEmptyState({ onPromptSelect }: ChatEmptyStateProps) {
               boxShadow: "0 0 32px rgba(201,168,76,0.1)",
             }}
           >
-            <div className="w-5 h-5 rounded-full bg-[#C9A84C]" />
+            <GiSoccerBall className="w-7 h-7 text-[#C9A84C]" />
           </div>
           {/* Ping ring */}
           <span

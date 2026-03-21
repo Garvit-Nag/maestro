@@ -67,5 +67,14 @@ export function ComponentRenderer({ type, data, isLoading }: ComponentRendererPr
     ? (data as any).result
     : data
 
+  // Guard: skip rendering if data is errored, null, or empty
+  if (unwrapped == null) return null
+  if (typeof unwrapped === "object" && !Array.isArray(unwrapped)) {
+    const obj = unwrapped as Record<string, unknown>
+    if ("error" in obj) return null
+    if (Object.keys(obj).length === 0) return null
+  }
+  if (Array.isArray(unwrapped) && unwrapped.length === 0) return null
+
   return <Component data={unwrapped} />
 }

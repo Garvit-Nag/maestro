@@ -3,6 +3,7 @@
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
+import { GiSoccerBall } from "react-icons/gi"
 import { tickerItems, heroContent } from "@/lib/content/landing"
 import { useAuthModal } from "@/lib/auth-modal-context"
 
@@ -116,8 +117,8 @@ export function LandingHero() {
             {/* Badge */}
             <motion.div {...fadeUp(0.1)} className="flex items-center gap-2.5 mb-8">
               <div className="relative flex items-center justify-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] block" />
-                <span className="absolute w-3 h-3 rounded-full bg-[#C9A84C]/30 animate-ping" />
+                <GiSoccerBall className="w-3 h-3 text-[#C9A84C]" />
+                <span className="absolute w-4 h-4 rounded-full bg-[#C9A84C]/30 animate-ping" />
               </div>
               <span className="text-[11px] uppercase tracking-[0.35em] text-[#C9A84C]">
                 {heroContent.label}
@@ -229,7 +230,7 @@ export function LandingHero() {
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-5">
                   <div className="w-5 h-5 rounded-full bg-[#C9A84C]/20 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-[#C9A84C]" />
+                    <GiSoccerBall className="w-3 h-3 text-[#C9A84C]" />
                   </div>
                   <span className="text-[12px] text-white/50 tracking-wide">Maestro</span>
                 </div>
