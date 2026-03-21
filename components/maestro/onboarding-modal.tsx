@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase"
 import { Check, Search } from "lucide-react"
+import { FaArrowRight, FaArrowLeft } from "react-icons/fa6"
 import { LEAGUES } from "@/lib/content/leagues"
 
 interface Team {
@@ -219,7 +220,10 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     boxShadow: selectedTeam ? "0 0 20px rgba(201,168,76,0.25)" : "none",
                   }}
                 >
-                  {selectedTeam ? `Continue with ${selectedTeam.shortName} →` : "Skip →"}
+                  <span className="flex items-center justify-center gap-2">
+                    {selectedTeam ? `Continue with ${selectedTeam.shortName}` : "Skip"}
+                    <FaArrowRight className="w-3 h-3" />
+                  </span>
                 </button>
               </motion.div>
             ) : (
@@ -273,7 +277,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     className="px-5 py-3 rounded-xl text-[13px] text-white/40 hover:text-white/70 transition-colors"
                     style={{ border: "1px solid rgba(255,255,255,0.08)" }}
                   >
-                    ← Back
+                    <span className="flex items-center gap-2"><FaArrowLeft className="w-3 h-3" /> Back</span>
                   </button>
                   <button
                     onClick={handleComplete}
@@ -286,7 +290,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                       opacity: saving ? 0.6 : 1,
                     }}
                   >
-                    {saving ? "Saving..." : "Enter Maestro →"}
+                    {saving ? "Saving..." : <span className="flex items-center justify-center gap-2">Enter Maestro <FaArrowRight className="w-3 h-3" /></span>}
                   </button>
                 </div>
               </motion.div>

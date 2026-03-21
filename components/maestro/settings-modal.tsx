@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { X, Search, Check, User } from "lucide-react"
+import { FaArrowRight, FaArrowLeft } from "react-icons/fa6"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase"
 import { LEAGUES } from "@/lib/content/leagues"
@@ -172,7 +173,7 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
                   onClick={screen === "main" ? onClose : () => setScreen("main")}
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/6 transition-colors"
                 >
-                  {screen === "main" ? <X className="w-4 h-4" /> : <span className="text-[12px]">←</span>}
+                  {screen === "main" ? <X className="w-4 h-4" /> : <FaArrowLeft className="w-3 h-3" />}
                 </button>
               </div>
 
@@ -278,7 +279,7 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
                       ) : (
                         <span className="text-[13px] text-white/20 flex-1">Choose a team...</span>
                       )}
-                      <span className="text-[11px] text-white/20">→</span>
+                      <FaArrowRight className="w-2.5 h-2.5 text-white/20" />
                     </button>
                   </div>
 
@@ -308,7 +309,7 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
                       ) : (
                         <span className="text-[13px] text-white/20 flex-1">Choose leagues...</span>
                       )}
-                      <span className="text-[11px] text-white/20 ml-auto shrink-0">→</span>
+                      <FaArrowRight className="w-2.5 h-2.5 text-white/20 ml-auto shrink-0" />
                     </button>
                   </div>
 
