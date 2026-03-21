@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion"
 import { GiSoccerBall } from "react-icons/gi"
+import { FaArrowRight } from "react-icons/fa6"
 import { ComponentRenderer } from "@/components/football/component-renderer"
 
 export interface Message {
@@ -129,7 +130,7 @@ export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesPro
                 onClick={onNewChat}
                 className="text-[#C9A84C] font-medium hover:text-[#D4B85C] transition-colors"
               >
-                New chat →
+                <span className="flex items-center gap-1.5">New chat <FaArrowRight className="w-3 h-3" /></span>
               </button>
             </div>
           </motion.div>
