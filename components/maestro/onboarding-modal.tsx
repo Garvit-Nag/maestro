@@ -245,15 +245,17 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                             border: isSelected ? "1px solid rgba(201,168,76,0.4)" : "1px solid rgba(255,255,255,0.07)",
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={league.badge}
-                            alt={league.name}
-                            className="w-8 h-8 object-contain shrink-0"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
-                            }}
-                          />
+                          <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-white/90 rounded-full p-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={league.badge}
+                              alt={league.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
+                              }}
+                            />
+                          </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[12px] text-white/80 font-medium truncate">{league.name}</p>
                             <p className="text-[10px] text-white/30">{league.country}</p>

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { LogOut, X, Settings } from "lucide-react"
+import { LogOut, X, Settings, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase"
 import { sidebarContent } from "@/lib/content/chat"
@@ -112,9 +112,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
     if (currentConversationId === id) router.push("/chat")
   }
 
-  const handleAvatarChange = useCallback((url: string | null) => {
-    setUserAvatarUrl(url)
-  }, [])
+
 
   return (
     <>
@@ -268,9 +266,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
                 className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center"
                 style={{ background: "rgba(201,168,76,0.15)", border: "1.5px solid rgba(201,168,76,0.3)" }}
               >
-                <svg className="w-3.5 h-3.5 text-[#C9A84C]/70" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
+                <User className="w-3.5 h-3.5 text-[#C9A84C]/70" />
               </div>
             )}
             <span className="text-[13px] text-white/50 group-hover:text-white/80 transition-colors flex-1 truncate">
@@ -321,7 +317,6 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         userAvatarUrl={userAvatarUrl}
-        onAvatarChange={handleAvatarChange}
       />
     </>
   )

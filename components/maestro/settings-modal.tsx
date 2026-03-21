@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { X, Camera, Search, Check } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, Search, Check, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase"
 import { LEAGUES } from "@/lib/content/leagues"
@@ -17,10 +17,9 @@ interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
   userAvatarUrl: string | null
-  onAvatarChange: (url: string | null) => void
 }
 
-export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalProps) {
   /* ─── state ────────────────────────────────────── */
   const [screen, setScreen] = useState<"main" | "team" | "league">("main")
   const [teams, setTeams] = useState<Team[]>([])
@@ -30,14 +29,11 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(userAvatarUrl)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
   /* ─── load prefs on open ────────────────────────── */
   useEffect(() => {
     if (!isOpen) return
-    setAvatarPreview(userAvatarUrl)
     setScreen("main")
 
     async function loadPrefs() {
@@ -89,34 +85,7 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }
     t.shortName.toLowerCase().includes(teamSearch.toLowerCase())
   )
 
-  /* ─── avatar upload ─────────────────────────────── */
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
 
-    const reader = new FileReader()
-    reader.onloadend = () => setAvatarPreview(reader.result as string)
-    reader.readAsDataURL(file)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const ext = file.name.split(".").pop()
-    const filePath = `avatars/${user.id}.${ext}`
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true })
-
-    if (!uploadError) {
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath)
-      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`
-      setAvatarPreview(publicUrl)
-      onAvatarChange(publicUrl)
-
-      await supabase.auth.updateUser({ data: { avatar_url: publicUrl } })
-    }
-  }
 
   /* ─── save ──────────────────────────────────────── */
   const handleSave = async () => {
@@ -223,11 +192,11 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }
                       Profile Image
                     </label>
                     <div className="flex items-center gap-4">
-                      <div className="relative group">
-                        {avatarPreview ? (
+                      <div>
+                        {userAvatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={avatarPreview}
+                            src={userAvatarUrl}
                             alt="Avatar"
                             className="w-14 h-14 rounded-full object-cover"
                             style={{ border: "2px solid rgba(201,168,76,0.3)" }}
@@ -240,44 +209,18 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }
                               border: "2px solid rgba(201,168,76,0.3)",
                             }}
                           >
-                            <svg className="w-6 h-6 text-[#C9A84C]/60" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                            </svg>
+                            <User className="w-6 h-6 text-[#C9A84C]/60" />
                           </div>
                         )}
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        >
-                          <Camera className="w-4 h-4 text-white/80" />
-                        </button>
                       </div>
-                      <div>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-[12px] text-[#C9A84C] hover:text-[#D4B85C] transition-colors"
-                        >
-                          Upload new photo
-                        </button>
-                        {avatarPreview && (
-                          <button
-                            onClick={() => {
-                              setAvatarPreview(null)
-                              onAvatarChange(null)
-                            }}
-                            className="block text-[11px] text-white/30 hover:text-red-400 transition-colors mt-1"
-                          >
-                            Remove photo
-                          </button>
-                        )}
+                      <div className="flex flex-col justify-center">
+                        <span className="text-[12px] text-white/50 mb-0.5">
+                          Profile Photo
+                        </span>
+                        <span className="text-[10px] text-white/30 max-w-[180px]">
+                          Your photo syncs automatically when signing in via Google.
+                        </span>
                       </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
                     </div>
                   </div>
 
@@ -464,15 +407,17 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl, onAvatarChange }
                             border: isSelected ? "1px solid rgba(201,168,76,0.4)" : "1px solid rgba(255,255,255,0.07)",
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={league.badge}
-                            alt={league.name}
-                            className="w-8 h-8 object-contain shrink-0"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
-                            }}
-                          />
+                          <div className="w-8 h-8 shrink-0 flex items-center justify-center bg-white/90 rounded-full p-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={league.badge}
+                              alt={league.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.visibility = "hidden"
+                              }}
+                            />
+                          </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[12px] text-white/80 font-medium truncate">{league.name}</p>
                             <p className="text-[10px] text-white/30">{league.country}</p>
