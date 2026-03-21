@@ -12,6 +12,7 @@ export function AuthModal() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [username, setUsername] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,13 +42,22 @@ export function AuthModal() {
     setMessage(null)
 
     if (isSignUp) {
+      if (!username.trim()) {
+        setError("Please enter a username.")
+        setLoading(false)
+        return
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { data: { username: username.trim() }, emailRedirectTo: `${window.location.origin}/auth/callback` },
       })
       if (error) {
-        setError(error.message)
+        if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already taken")) {
+          setError("This email is already in use. Please sign in instead.")
+        } else {
+          setError(error.message)
+        }
       } else {
         setMessage("Check your email for a confirmation link.")
       }
@@ -169,6 +179,23 @@ export function AuthModal() {
                 onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
               />
+              {isSignUp && (
+                <input
+                  type="text"
+                  placeholder="Username (max 10 chars)"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.slice(0, 10))}
+                  maxLength={10}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-[14px] text-white placeholder:text-white/25 focus:outline-none transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+                />
+              )}
               <input
                 type="password"
                 placeholder="Password"
@@ -184,9 +211,20 @@ export function AuthModal() {
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
               />
 
-              {error && (
-                <p className="text-[12px] text-red-400/80 px-1 pt-1">{error}</p>
-              )}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: -5 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -5 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="text-[13px] text-red-400/90 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2.5 mt-1 leading-snug">
+                      {error}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               {message && (
                 <p className="text-[12px] text-green-400/80 px-1 pt-1">{message}</p>
               )}
@@ -207,7 +245,7 @@ export function AuthModal() {
               <div className="pt-4 text-center">
                 <button
                   type="button"
-                  onClick={() => { setIsSignUp(!isSignUp); setError(null); setMessage(null) }}
+                  onClick={() => { setIsSignUp(!isSignUp); setError(null); setMessage(null); setUsername("") }}
                   className="text-[13px] text-white/40 hover:text-white/70 transition-colors"
                 >
                   {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}

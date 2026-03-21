@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react"
 import { GiSoccerBall } from "react-icons/gi"
+import { Menu } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Logo } from "@/components/maestro/logo"
 import { ChatSidebar } from "@/components/maestro/chat-sidebar"
 import { ChatEmptyState } from "@/components/maestro/chat-empty-state"
 import { ChatMessages, Message } from "@/components/maestro/chat-messages"
@@ -19,8 +21,10 @@ function ChatPageInner() {
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(conversationIdParam)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [prefsUpdated, setPrefsUpdated] = useState(0)
   const [isInitializing, setIsInitializing] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const supabase = createClient()
 
@@ -139,21 +143,36 @@ function ChatPageInner() {
 
   const handleOnboardingComplete = useCallback(() => {
     setShowOnboarding(false)
+    setPrefsUpdated((n) => n + 1)
   }, [])
 
   const hasMessages = messages.length > 0
 
   if (isInitializing) {
     return (
-      <div className="flex h-screen bg-[#050508] items-center justify-center">
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
-            />
-          ))}
+      <div className="flex h-screen w-full bg-[#050508] overflow-hidden">
+        {/* Skeleton Sidebar (hidden on mobile) */}
+        <div className="hidden lg:flex flex-col w-[240px] px-5 py-7 border-r border-[#C9A84C]/5">
+           <div className="w-32 h-6 bg-white/5 rounded animate-pulse mb-8" />
+           <div className="w-full h-10 bg-white/5 rounded-xl animate-pulse mb-7" />
+           <div className="w-full h-28 bg-white/5 rounded-xl animate-pulse mb-7" style={{ animationDelay: "0.15s" }} />
+           <div className="space-y-3 flex-1 mt-4 opacity-50">
+              <div className="w-3/4 h-6 bg-white/5 rounded animate-pulse" />
+              <div className="w-5/6 h-6 bg-white/5 rounded animate-pulse" style={{ animationDelay: "0.15s" }} />
+              <div className="w-2/3 h-6 bg-white/5 rounded animate-pulse" style={{ animationDelay: "0.3s" }} />
+           </div>
+           <div className="w-full h-10 bg-white/5 rounded-xl animate-pulse mt-4" />
+        </div>
+        
+        {/* Skeleton Main Area */}
+        <div className="flex-1 flex flex-col p-4 md:p-8 justify-center items-center relative">
+           <div className="w-16 h-16 bg-white/5 rounded-2xl animate-pulse mb-8" />
+           <div className="w-64 h-8 bg-white/5 rounded-lg animate-pulse mb-5" />
+           <div className="w-96 h-4 bg-white/5 rounded animate-pulse max-w-[80%]" style={{ animationDelay: "0.15s" }} />
+           
+           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4">
+              <div className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl animate-pulse" style={{ animationDelay: "0.3s" }} />
+           </div>
         </div>
       </div>
     )
@@ -164,35 +183,33 @@ function ChatPageInner() {
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
       <div className="flex h-screen bg-[#050508] overflow-hidden">
-        <ChatSidebar onNewChat={handleNewChat} currentConversationId={conversationId} />
+        <ChatSidebar
+          onNewChat={() => {
+            handleNewChat()
+            setIsMobileMenuOpen(false)
+          }}
+          currentConversationId={conversationId}
+          mobileOpen={isMobileMenuOpen}
+          onMobileClose={() => setIsMobileMenuOpen(false)}
+          prefsUpdated={prefsUpdated}
+        />
 
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Top bar */}
+          {/* Mobile Top bar */}
           <div
-            className="shrink-0 flex items-center justify-between px-5 py-3.5"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+            className="shrink-0 lg:hidden flex items-center justify-between px-5 py-3.5 relative z-30"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#050508" }}
           >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-5 h-5 rounded-md flex items-center justify-center"
-                style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)" }}
-              >
-                <GiSoccerBall className="w-3 h-3 text-[#C9A84C]" />
-              </div>
-              <span className="text-[13px] text-white/50 font-light">Maestro</span>
-              <span
-                className="text-[10px] text-white/20 px-1.5 py-0.5 rounded-md"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                Football Intelligence
-              </span>
+            <div className="-ml-1 transform scale-90">
+              <Logo onClick={() => setIsMobileMenuOpen(false)} />
             </div>
-
-            <span className="lg:hidden text-[13px] font-semibold tracking-[0.25em] text-white">
-              maestro
-            </span>
-
-            <div className="w-24" />
+            
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-1.5 -mr-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Chat area */}

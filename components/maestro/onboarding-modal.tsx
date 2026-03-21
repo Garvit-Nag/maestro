@@ -59,7 +59,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
       favourite_team_id: selectedTeam?.id?.toString() ?? null,
       followed_leagues: selectedLeagues,
       has_completed_onboarding: true,
-    })
+    }, { onConflict: 'user_id' })
 
     setSaving(false)
     onComplete()

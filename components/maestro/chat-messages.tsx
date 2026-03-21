@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+
 import { motion } from "framer-motion"
 import { GiSoccerBall } from "react-icons/gi"
 import { ComponentRenderer } from "@/components/football/component-renderer"
@@ -39,12 +39,6 @@ function normalizeMessage(message: Message): Message {
 }
 
 export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesProps) {
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isLoading])
-
   // Check if any message suggests new chat
   const lastMessage = messages[messages.length - 1]
   const showNewChatBanner = lastMessage?.suggest_new_chat
@@ -163,21 +157,16 @@ export function ChatMessages({ messages, isLoading, onNewChat }: ChatMessagesPro
               <p className="text-[12px] text-white/30 mb-3 font-medium tracking-wide">
                 Maestro
               </p>
-              {/* Thinking dots */}
-              <div className="flex gap-1.5 items-center h-5">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
-                  />
-                ))}
+              {/* Sleek Skeleton Loader */}
+              <div className="flex flex-col gap-2.5 mt-1.5 w-[200px]">
+                <div className="h-2 w-full bg-white/5 rounded-full animate-pulse" />
+                <div className="h-2 w-4/5 bg-white/5 rounded-full animate-pulse" style={{ animationDelay: "0.15s" }} />
+                <div className="h-2 w-5/6 bg-white/5 rounded-full animate-pulse" style={{ animationDelay: "0.3s" }} />
               </div>
             </div>
           </motion.div>
         )}
 
-        <div ref={bottomRef} />
       </div>
     </div>
   )

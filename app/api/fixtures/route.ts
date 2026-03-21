@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { LEAGUES } from "@/lib/content/leagues"
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
 
 export async function GET() {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY
@@ -9,24 +14,26 @@ export async function GET() {
 
   try {
     const today = new Date().toISOString().split("T")[0]
-    const dateTo = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]
+    const dateTo = new Date(Date.now() + 21 * 86400000).toISOString().split("T")[0]
 
-    // Try to read user's favourite team from preferences
+    // Try to read user's favourite team and followed leagues from preferences
     let favouriteTeamId: string | null = null
+    let followedLeagues: string[] = []
     try {
       const supabase = await createServerSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: prefs } = await supabase
+        const { data: prefsRows } = await supabase
           .from("user_preferences")
-          .select("favourite_team_id")
+          .select("favourite_team_id, followed_leagues")
           .eq("user_id", user.id)
-          .single()
-        favouriteTeamId = prefs?.favourite_team_id ?? null
+          .limit(1)
+        favouriteTeamId = prefsRows?.[0]?.favourite_team_id ?? null
+        followedLeagues = prefsRows?.[0]?.followed_leagues ?? []
       }
     } catch {}
 
-    // If user has a favourite team, fetch their next match first
+    // Tier 1: If user has a favourite team, fetch their next match first
     if (favouriteTeamId) {
       const teamRes = await fetch(
         `https://api.football-data.org/v4/teams/${favouriteTeamId}/matches?status=SCHEDULED&dateFrom=${today}&dateTo=${dateTo}&limit=1`,
@@ -35,11 +42,33 @@ export async function GET() {
       if (teamRes.ok) {
         const teamData = await teamRes.json()
         const match = teamData.matches?.[0]
-        if (match) return NextResponse.json(formatMatch(match, today), { headers: { "Cache-Control": "public, max-age=300" } })
+        if (match) return NextResponse.json(formatMatch(match, today), { headers: { "Cache-Control": "private, max-age=60" } })
       }
     }
 
-    // Fallback: next prominent match across top competitions
+    // Tier 2: Pick a random followed league and fetch an upcoming match from it
+    if (followedLeagues.length > 0) {
+      const randomLeagueId = pickRandom(followedLeagues)
+      const leagueEntry = LEAGUES.find((l) => l.id === randomLeagueId)
+      if (leagueEntry) {
+        const leagueRes = await fetch(
+          `https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${dateTo}&competitions=${leagueEntry.code}`,
+          { headers: { "X-Auth-Token": apiKey } }
+        )
+        if (leagueRes.ok) {
+          const leagueData = await leagueRes.json()
+          const scheduledMatches: Match[] = (leagueData.matches ?? []).filter(
+            (m: Match) => m.status === "SCHEDULED" || m.status === "TIMED"
+          )
+          if (scheduledMatches.length > 0) {
+            const match = pickRandom(scheduledMatches)
+            return NextResponse.json(formatMatch(match, today), { headers: { "Cache-Control": "private, max-age=60" } })
+          }
+        }
+      }
+    }
+
+    // Tier 3: Fallback — random match from top competitions
     const competitions = ["CL", "PL", "PD", "BL1", "SA", "FL1"]
     const res = await fetch(
       `https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${dateTo}&competitions=${competitions.join(",")}`,
@@ -50,12 +79,12 @@ export async function GET() {
 
     const data = await res.json()
     const matches: Match[] = data.matches ?? []
-    const live = matches.find((m) => m.status === "IN_PLAY" || m.status === "PAUSED")
-    const next = matches.find((m) => m.status === "SCHEDULED" || m.status === "TIMED")
-    const match = live ?? next
-    if (!match) return NextResponse.json(null)
+    const live = matches.filter((m) => m.status === "IN_PLAY" || m.status === "PAUSED")
+    const scheduled = matches.filter((m) => m.status === "SCHEDULED" || m.status === "TIMED")
+    const pool = live.length > 0 ? live : scheduled
+    if (pool.length === 0) return NextResponse.json(null)
 
-    return NextResponse.json(formatMatch(match, today), { headers: { "Cache-Control": "public, max-age=300" } })
+    return NextResponse.json(formatMatch(pickRandom(pool), today), { headers: { "Cache-Control": "private, max-age=60" } })
   } catch {
     return NextResponse.json(null)
   }

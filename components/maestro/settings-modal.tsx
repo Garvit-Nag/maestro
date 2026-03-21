@@ -27,6 +27,7 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
   const [teamSearch, setTeamSearch] = useState("")
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>([])
+  const [displayName, setDisplayName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
@@ -41,11 +42,14 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: prefs } = await supabase
+      setDisplayName(user.user_metadata?.username || user.user_metadata?.full_name?.split(" ")[0] || "")
+
+      const { data: prefsRows } = await supabase
         .from("user_preferences")
         .select("favourite_team, favourite_team_id, followed_leagues")
         .eq("user_id", user.id)
-        .single()
+        .limit(1)
+      const prefs = prefsRows?.[0] ?? null
 
       if (prefs) {
         if (prefs.favourite_team) {
@@ -93,14 +97,15 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    await supabase
-      .from("user_preferences")
-      .upsert({
+    await Promise.all([
+      supabase.from("user_preferences").upsert({
         user_id: user.id,
         favourite_team: selectedTeam?.name ?? null,
         favourite_team_id: selectedTeam?.id?.toString() ?? null,
         followed_leagues: selectedLeagues.length > 0 ? selectedLeagues : null,
-      })
+      }, { onConflict: 'user_id' }),
+      supabase.auth.updateUser({ data: { username: displayName.trim() } }),
+    ])
 
     setIsSaving(false)
     onClose()
@@ -172,15 +177,18 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
               </div>
 
               {isLoading ? (
-                <div className="flex justify-center py-10">
-                  <div className="flex gap-1.5">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
-                      />
-                    ))}
+                <div className="flex-1 p-6 space-y-6">
+                  <div>
+                    <div className="h-3 w-24 rounded bg-white/[0.05] animate-pulse mb-3" />
+                    <div className="h-14 rounded-xl bg-white/[0.05] animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="h-3 w-32 rounded bg-white/[0.05] animate-pulse mb-3" />
+                    <div className="h-11 rounded-xl bg-white/[0.05] animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="h-3 w-36 rounded bg-white/[0.05] animate-pulse mb-3" />
+                    <div className="h-11 rounded-xl bg-white/[0.05] animate-pulse" />
                   </div>
                 </div>
               ) : screen === "main" ? (
@@ -222,6 +230,28 @@ export function SettingsModal({ isOpen, onClose, userAvatarUrl }: SettingsModalP
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Display Name */}
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[2px] text-white/30 block mb-2">
+                      Display Name
+                    </label>
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value.slice(0, 10))}
+                      maxLength={10}
+                      placeholder="Your name..."
+                      className="w-full px-4 py-3 rounded-xl text-[14px] text-white placeholder:text-white/25 focus:outline-none transition-all duration-200"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+                    />
+                    <p className="text-[10px] text-white/20 mt-1.5">Max 10 characters. Shown in your profile.</p>
                   </div>
 
                   {/* Favourite Team — click to open team picker */}

@@ -1,9 +1,13 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LogOut, X, Settings, User } from "lucide-react"
+import { LogOut, X, Settings, User, Plus, Trash2 } from "lucide-react"
+import { GiSoccerBall } from "react-icons/gi"
+import { FiEdit } from "react-icons/fi"
 import { motion, AnimatePresence } from "framer-motion"
+import { Logo } from "@/components/maestro/logo"
 import { createClient } from "@/lib/supabase"
 import { sidebarContent } from "@/lib/content/chat"
 import { SettingsModal } from "@/components/maestro/settings-modal"
@@ -26,9 +30,12 @@ interface FixtureData {
 interface ChatSidebarProps {
   onNewChat?: () => void
   currentConversationId?: string | null
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+  prefsUpdated?: number
 }
 
-export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarProps) {
+export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMobileClose, prefsUpdated }: ChatSidebarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -43,9 +50,12 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      const name = user.user_metadata?.full_name || user.email || "User"
-      setUserName(name.split(" ")[0])
-      setUserAvatarUrl(user.user_metadata?.avatar_url ?? null)
+      const name = user.user_metadata?.username
+        || user.user_metadata?.full_name?.split(" ")[0]
+        || user.email?.split("@")[0]
+        || "User"
+      setUserName(name)
+      setUserAvatarUrl(user.user_metadata?.avatar_url ?? "/avatar.png")
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -71,12 +81,20 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
   }
 
   // Load featured fixture
-  useEffect(() => {
-    fetch("/api/fixtures")
+  function loadFixture() {
+    fetch("/api/fixtures", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => { if (data) setFixture(data) })
       .catch(() => {})
-  }, [])
+  }
+
+  useEffect(() => { loadFixture() }, [])
+
+  // Re-fetch fixture when preferences are updated (onboarding or settings)
+  useEffect(() => {
+    if (prefsUpdated) loadFixture()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefsUpdated])
 
   // Click-outside handler for profile menu
   useEffect(() => {
@@ -116,42 +134,57 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
 
   return (
     <>
+      {/* Mobile backdrop */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onMobileClose}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity"
+          />
+        )}
+      </AnimatePresence>
+
       <aside
-        className="hidden lg:flex flex-col w-[240px] min-h-screen px-5 py-7"
+        className={`flex flex-col w-[280px] lg:w-[240px] min-h-screen px-5 py-7 fixed inset-y-0 left-0 lg:relative z-50 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
         style={{
           background: "rgba(5,5,8,0.95)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
           backdropFilter: "blur(20px)",
         }}
       >
-        {/* Logo */}
-        <span className="text-[13px] font-semibold tracking-[0.25em] text-white mb-8">
-          maestro
-        </span>
+        <Logo className="mb-8" />
 
         {/* New Chat button */}
         <button
           onClick={handleNewChat}
-          className="w-full h-9 flex items-center justify-center text-[12px] text-white/40 rounded-xl mb-7 transition-all duration-200 hover:text-white/70"
+          className="w-full h-10 flex items-center justify-center gap-2 font-medium rounded-xl mb-7 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
           style={{
-            border: "1px solid rgba(255,255,255,0.07)",
-            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(201,168,76,0.4)",
+            background: "rgba(201,168,76,0.08)",
+            color: "#C9A84C",
+            boxShadow: "0 0 12px rgba(201,168,76,0.1)",
           }}
           onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(201,168,76,0.35)"
-            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 16px rgba(201,168,76,0.06)"
+            ;(e.currentTarget as HTMLButtonElement).style.background = "rgba(201,168,76,0.15)"
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(201,168,76,0.25)"
           }}
           onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.07)"
-            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "none"
+            ;(e.currentTarget as HTMLButtonElement).style.background = "rgba(201,168,76,0.08)"
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 12px rgba(201,168,76,0.1)"
           }}
         >
-          {sidebarContent.newChat}
+          <FiEdit className="w-4 h-4 mb-px" strokeWidth={2.5} />
+          <span className="tracking-wide text-[13px] font-semibold">New Chat</span>
         </button>
 
         {/* Featured match */}
         <div
-          className="mb-7 rounded-xl p-4 relative overflow-hidden"
+          className="group mb-7 rounded-xl p-4 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(201,168,76,0.12)]"
           style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.07)",
@@ -192,10 +225,13 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
 
         {/* Recent conversations */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <span className="text-[9px] uppercase tracking-[3px] text-white/20 mb-3 block">
-            {sidebarContent.recentLabel}
-          </span>
-          <div className="space-y-0.5 overflow-y-auto maestro-scrollbar" style={{ maxHeight: "calc(100% - 24px)" }}>
+          <div className="flex items-center gap-3 mb-4 mt-2">
+            <span className="text-[10px] uppercase tracking-[3px] text-[#C9A84C]/80 font-medium">
+              {sidebarContent.recentLabel}
+            </span>
+            <div className="flex-1 h-px bg-linear-to-r from-[#C9A84C]/20 to-transparent" />
+          </div>
+          <div className="space-y-0.5 overflow-y-auto maestro-scrollbar pb-14" style={{ maxHeight: "calc(100% - 24px)" }}>
             {conversations.length > 0 ? (
               conversations.map((conv, index) => (
                 <motion.div
@@ -207,7 +243,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
                 >
                   <button
                     onClick={() => handleConversationClick(conv.id)}
-                    className="flex-1 text-left text-[13px] truncate px-2.5 py-2 rounded-lg transition-all duration-200 min-w-0"
+                    className="flex-1 text-left text-[13px] truncate px-2.5 py-2 rounded-lg transition-all duration-200 min-w-0 group-hover/item:translate-x-1"
                     style={{
                       color: currentConversationId === conv.id ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.35)",
                       background: currentConversationId === conv.id ? "rgba(255,255,255,0.06)" : "transparent",
@@ -232,7 +268,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
                     className="opacity-0 group-hover/item:opacity-100 shrink-0 p-1 rounded transition-all duration-150 hover:text-red-400"
                     style={{ color: "rgba(255,255,255,0.25)" }}
                   >
-                    <X className="w-3 h-3" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </motion.div>
               ))
@@ -245,8 +281,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
         {/* Bottom profile section */}
         <div className="relative" ref={profileMenuRef}>
           <div
-            className="h-px mb-4"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+            className="h-px mb-4 bg-linear-to-r from-transparent via-[#C9A84C]/30 to-transparent"
           />
 
           <div
@@ -315,7 +350,7 @@ export function ChatSidebar({ onNewChat, currentConversationId }: ChatSidebarPro
       {/* Settings Modal */}
       <SettingsModal
         isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+        onClose={() => { setShowSettings(false); loadFixture() }}
         userAvatarUrl={userAvatarUrl}
       />
     </>

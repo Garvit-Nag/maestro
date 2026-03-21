@@ -105,7 +105,7 @@ export function LandingCapabilities() {
   return (
     <section
       id="capabilities"
-      className="relative bg-[#050508] px-8 lg:px-16 py-24 lg:py-32"
+      className="relative px-8 lg:px-16 py-24 lg:py-32 scroll-mt-16"
       style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
     >
       <div className="relative max-w-screen-xl">
@@ -154,7 +154,7 @@ export function LandingCapabilities() {
               initial={{ opacity: 0, y: 28 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as const, delay: 0.2 + index * 0.1 }}
-              className="group relative rounded-2xl p-6 flex flex-col cursor-default overflow-hidden transition-all duration-300"
+              className="group relative rounded-2xl p-6 flex flex-col cursor-default overflow-hidden transition-all duration-300 hover:scale-[1.02]"
               style={{
                 background: "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
                 border: "1px solid rgba(255,255,255,0.07)",
