@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import { Menu, X, Settings, LogOut } from "lucide-react"
 import { GiSoccerBall } from "react-icons/gi"
 import { FaArrowRight } from "react-icons/fa6"
 import { useRouter } from "next/navigation"
@@ -11,6 +12,7 @@ import { useAuthModal } from "@/lib/auth-modal-context"
 import { Logo } from "@/components/maestro/logo"
 import { UserProfileButton } from "@/components/maestro/user-profile-button"
 import TiltedCard from "@/components/ui/tilted-card"
+import { SettingsModal } from "@/components/maestro/settings-modal"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -36,6 +38,8 @@ export function LandingHero() {
   const { openAuthModal, sessionUser, setSessionUser } = useAuthModal()
   const router = useRouter()
   const [scrolled, setScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -57,6 +61,15 @@ export function LandingHero() {
         <motion.div {...fadeUp(0)}>
           <Logo />
         </motion.div>
+
+        {/* Mobile menu button */}
+        <motion.button 
+          {...fadeUp(0.05)}
+          className="md:hidden text-white/70 hover:text-white transition-colors p-2 -mr-2"
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <Menu className="w-6 h-6" />
+        </motion.button>
 
         {/* Right: nav links + divider + CTA */}
         <motion.div {...fadeUp(0.05)} className="hidden md:flex items-center gap-6">
@@ -104,7 +117,110 @@ export function LandingHero() {
         </motion.div>
       </header>
 
-      <section className="relative h-screen overflow-hidden flex flex-col">
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[250] bg-[#050508]/98 backdrop-blur-xl flex flex-col md:hidden"
+          >
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-8 py-5 border-b border-white/[0.05]">
+              <Logo />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-white/40 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Nav links — all identical style */}
+            <div className="flex flex-col flex-1 px-8 pt-4 overflow-y-auto">
+              {[
+                { label: "Features", href: "#capabilities", type: "link" as const },
+                { label: "FAQ", href: "#faq", type: "link" as const },
+                ...(sessionUser
+                  ? [{ label: "Go to Chat", href: "/chat", type: "link" as const }]
+                  : [{ label: "Try it", href: null, type: "action" as const }]
+                ),
+              ].map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.28, delay: 0.06 + i * 0.07 }}
+                  className="border-b border-white/[0.05]"
+                >
+                  {item.type === "link" && item.href ? (
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between py-5 text-[18px] font-medium text-white/60 hover:text-white transition-colors group"
+                    >
+                      <span>{item.label}</span>
+                      <FaArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors" />
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => { setIsMobileMenuOpen(false); openAuthModal() }}
+                      className="w-full flex items-center justify-between py-5 text-[18px] font-medium text-white/60 hover:text-white transition-colors group"
+                    >
+                      <span>{item.label}</span>
+                      <FaArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 transition-colors" />
+                    </button>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Bottom — profile / auth */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.35 }}
+              className="px-8 py-6 border-t border-white/[0.05]"
+            >
+              {sessionUser ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={userAvatarUrl} alt={userName} className="w-8 h-8 rounded-full border border-white/10" />
+                    <span className="text-[14px] font-medium text-white/50">{userName}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => { setIsMobileMenuOpen(false); setShowSettings(true) }}
+                      className="text-white/35 hover:text-white/70 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => { setSessionUser(null); setIsMobileMenuOpen(false) }}
+                      className="text-white/35 hover:text-white/70 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); openAuthModal() }}
+                  className="group w-full flex items-center justify-between py-3.5 px-5 rounded-xl border border-white/[0.08] hover:border-[#C9A84C]/40 bg-white/[0.02] transition-all duration-300"
+                >
+                  <span className="text-[15px] font-medium text-white/60 group-hover:text-white transition-colors">Get started</span>
+                  <FaArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-[#C9A84C] transition-colors" />
+                </button>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+      <section className="relative min-h-screen xl:h-screen overflow-hidden flex flex-col">
         {/* Radial glow behind hero text */}
         <div className="absolute inset-0 z-[1] pointer-events-none">
           <div
@@ -117,9 +233,9 @@ export function LandingHero() {
         </div>
 
         {/* Hero body */}
-        <div className="relative z-10 w-full flex-1 flex items-center px-8 lg:px-16 gap-10 xl:gap-16 pt-[72px]">
+        <div className="relative z-10 w-full flex-1 flex flex-col xl:flex-row items-center px-8 lg:px-16 gap-10 xl:gap-16 pt-[120px] xl:pt-[72px] pb-16 xl:pb-0">
           {/* Left column */}
-          <div className="flex-1 max-w-2xl translate-y-4 lg:translate-y-6">
+          <div className="flex-1 max-w-2xl translate-y-0 lg:translate-y-6 w-full flex flex-col items-center xl:items-start text-center xl:text-left">
             {/* Headline */}
             <div className="mb-7 overflow-hidden">
               <motion.h1
@@ -152,7 +268,7 @@ export function LandingHero() {
             </motion.p>
 
             {/* CTAs */}
-            <motion.div {...fadeUp(0.42)} className="flex items-center gap-4 mb-12">
+            <motion.div {...fadeUp(0.42)} className="flex flex-wrap items-center justify-center xl:justify-start gap-4 mb-12">
               <button
                 onClick={sessionUser ? () => router.push("/chat") : openAuthModal}
                 className="group relative inline-flex items-center gap-3 bg-[#C9A84C] hover:bg-[#D4B85C] text-[#050508] font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 overflow-hidden"
@@ -178,7 +294,7 @@ export function LandingHero() {
             </motion.div>
 
             {/* Stat chips */}
-            <motion.div {...fadeUp(0.5)} className="flex items-center gap-3 flex-wrap">
+            <motion.div {...fadeUp(0.5)} className="flex items-center justify-center xl:justify-start gap-3 flex-wrap">
               {stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -198,7 +314,7 @@ export function LandingHero() {
             initial={{ opacity: 0, y: 32, rotateY: -4 }}
             animate={{ opacity: 1, y: 0, rotateY: 0 }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}
-            className="hidden xl:flex xl:flex-1 items-center justify-center translate-y-4 lg:translate-y-6"
+            className="flex w-full xl:w-auto xl:flex-1 items-center justify-center translate-y-0 lg:translate-y-6 mt-8 xl:mt-0 pb-12 xl:pb-0"
             style={{ perspective: "1200px" }}
           >
             <div className="relative w-full max-w-[500px]">
@@ -360,6 +476,12 @@ export function LandingHero() {
           ))}
         </div>
       </div>
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        userAvatarUrl={userAvatarUrl}
+      />
     </>
   )
 }

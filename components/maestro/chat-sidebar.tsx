@@ -148,7 +148,7 @@ export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMo
       </AnimatePresence>
 
       <aside
-        className={`flex flex-col w-[280px] lg:w-[240px] min-h-screen px-5 py-7 fixed inset-y-0 left-0 lg:relative z-50 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`flex flex-col w-full md:w-[280px] lg:w-[240px] min-h-screen px-5 py-7 fixed inset-y-0 left-0 lg:relative z-50 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
         style={{
@@ -157,7 +157,17 @@ export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMo
           backdropFilter: "blur(20px)",
         }}
       >
-        <Logo className="mb-8" />
+        <div className="flex items-center justify-between mb-8">
+          <Logo />
+          {onMobileClose && (
+            <button
+              onClick={onMobileClose}
+              className="lg:hidden text-white/40 hover:text-white transition-colors p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
         {/* New Chat button */}
         <button
@@ -284,10 +294,7 @@ export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMo
             className="h-px mb-4 bg-linear-to-r from-transparent via-[#C9A84C]/30 to-transparent"
           />
 
-          <div
-            className="flex items-center gap-3 cursor-pointer group px-1 py-1 rounded-lg hover:bg-white/4 transition-colors duration-200"
-            onClick={() => setShowProfileMenu((prev) => !prev)}
-          >
+          <div className="flex items-center gap-3 px-1 py-1">
             {/* Avatar */}
             {userAvatarUrl ? (
               <img
@@ -304,12 +311,34 @@ export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMo
                 <User className="w-3.5 h-3.5 text-[#C9A84C]/70" />
               </div>
             )}
-            <span className="text-[13px] text-white/50 group-hover:text-white/80 transition-colors flex-1 truncate">
+            <span
+              className="text-[13px] text-white/50 flex-1 truncate cursor-pointer hover:text-white/80 transition-colors hidden md:block"
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+            >
               {userName || "User"}
             </span>
+            <span className="text-[13px] text-white/50 flex-1 truncate md:hidden">
+              {userName || "User"}
+            </span>
+
+            {/* Mobile-only inline icons */}
+            <div className="flex items-center gap-3 md:hidden">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-white/35 hover:text-white/70 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-white/35 hover:text-white/70 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Profile popup menu */}
+          {/* Profile popup menu — desktop only */}
           <AnimatePresence>
             {showProfileMenu && (
               <motion.div
@@ -317,7 +346,7 @@ export function ChatSidebar({ onNewChat, currentConversationId, mobileOpen, onMo
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 6, scale: 0.97 }}
                 transition={{ duration: 0.15 }}
-                className="absolute bottom-full left-0 mb-2 rounded-xl p-1.5 min-w-[160px] shadow-xl"
+                className="absolute bottom-full left-0 mb-2 rounded-xl p-1.5 min-w-[160px] shadow-xl hidden md:block"
                 style={{
                   background: "rgba(10,10,14,0.95)",
                   border: "1px solid rgba(255,255,255,0.09)",

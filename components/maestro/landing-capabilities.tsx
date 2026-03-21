@@ -110,7 +110,7 @@ export function LandingCapabilities() {
     >
       <div className="relative max-w-screen-xl">
         {/* Section header */}
-        <div className="mb-16 max-w-2xl">
+        <div className="mb-16 max-w-2xl mx-auto lg:mx-0 flex flex-col items-center lg:items-start text-center lg:text-left">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
