@@ -63,7 +63,7 @@ export function ChatEmptyState({ onPromptSelect }: ChatEmptyStateProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.22 }}
-          className="grid grid-cols-2 gap-3 w-full"
+          className="grid grid-cols-2 auto-rows-fr gap-3 w-full"
         >
           {suggestedPrompts.map((prompt, index) => (
             <motion.button
@@ -72,21 +72,23 @@ export function ChatEmptyState({ onPromptSelect }: ChatEmptyStateProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.28 + index * 0.05 }}
-              className="group text-left p-4 rounded-xl transition-all duration-200"
+              className="group text-left p-4 rounded-xl transition-all duration-300 h-full flex flex-col transform hover:-translate-y-1"
               style={{
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
               onMouseEnter={(e) => {
                 ;(e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"
-                ;(e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(255,255,255,0.13)"
+                ;(e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(201,168,76,0.3)"
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px -4px rgba(201,168,76,0.15)"
               }}
               onMouseLeave={(e) => {
                 ;(e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"
                 ;(e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(255,255,255,0.07)"
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = "none"
               }}
             >
-              {(() => { const Icon = promptIcons[index]; return <Icon className="w-4 h-4 text-white/25 mb-2.5" strokeWidth={1.5} /> })()}
+              {(() => { const Icon = promptIcons[index]; return <Icon className="w-4 h-4 text-[#C9A84C]/70 mb-2.5" strokeWidth={1.5} /> })()}
               <p className="text-[13px] text-white/55 group-hover:text-white/85 transition-colors duration-200 leading-snug font-light">
                 {prompt}
               </p>

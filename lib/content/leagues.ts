@@ -4,6 +4,7 @@ export interface LeagueOption {
   name: string
   country: string
   badge: string
+  code: string
 }
 
 export const LEAGUES: readonly LeagueOption[] = [
@@ -12,47 +13,55 @@ export const LEAGUES: readonly LeagueOption[] = [
     name: "Premier League",
     country: "England",
     badge: "https://crests.football-data.org/PL.png",
+    code: "PL",
   },
   {
     id: "4335",
     name: "La Liga",
     country: "Spain",
     badge: "https://crests.football-data.org/PD.png",
+    code: "PD",
   },
   {
     id: "4331",
     name: "Bundesliga",
     country: "Germany",
     badge: "https://crests.football-data.org/BL1.png",
+    code: "BL1",
   },
   {
     id: "4332",
     name: "Serie A",
     country: "Italy",
     badge: "https://crests.football-data.org/SA.png",
+    code: "SA",
   },
   {
     id: "4334",
     name: "Ligue 1",
     country: "France",
     badge: "https://crests.football-data.org/FL1.png",
+    code: "FL1",
   },
   {
     id: "4480",
     name: "UEFA Champions League",
     country: "Europe",
     badge: "https://crests.football-data.org/CL.png",
+    code: "CL",
   },
   {
     id: "4337",
     name: "Eredivisie",
     country: "Netherlands",
     badge: "https://crests.football-data.org/ED.png",
+    code: "ED",
   },
   {
     id: "4344",
     name: "Primeira Liga",
     country: "Portugal",
     badge: "https://crests.football-data.org/PPL.png",
+    code: "PPL",
   },
 ]

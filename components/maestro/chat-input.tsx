@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { inputContent } from "@/lib/content/chat"
+import { FaArrowRight } from "react-icons/fa6"
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -53,7 +54,7 @@ export function ChatInput({ onSend, disabled, hint }: ChatInputProps) {
       <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit}>
           <div
-            className="relative flex items-end gap-3 rounded-2xl px-4 pt-3.5 pb-3 transition-all duration-200"
+            className="relative flex items-center gap-3 rounded-2xl px-4 pt-3 pb-3 transition-all duration-300"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: isFocused
@@ -83,7 +84,7 @@ export function ChatInput({ onSend, disabled, hint }: ChatInputProps) {
             <button
               type="submit"
               disabled={!hasValue || disabled}
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 mb-0.5"
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-300 transform hover:scale-[1.05] active:scale-[0.95]"
               style={{
                 background: hasValue && !disabled
                   ? "#C9A84C"
@@ -92,9 +93,7 @@ export function ChatInput({ onSend, disabled, hint }: ChatInputProps) {
                 boxShadow: hasValue && !disabled ? "0 0 16px rgba(201,168,76,0.35)" : "none",
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 2.5a.5.5 0 0 1 .5.5v9.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 12.793V3a.5.5 0 0 1 .5-.5z" transform="rotate(180, 8, 8)" />
-              </svg>
+              <FaArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>

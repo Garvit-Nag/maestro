@@ -17,7 +17,7 @@ export function LandingFaq() {
   return (
     <section
       id="faq"
-      className="relative bg-[#050508] px-8 lg:px-16 py-24 lg:py-32"
+      className="relative px-8 lg:px-16 py-24 lg:py-32"
       style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
     >
       {/* Subtle vertical glow */}
@@ -27,7 +27,7 @@ export function LandingFaq() {
       />
 
       <div ref={ref} className="max-w-screen-xl">
-        <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-24">
+        <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-24 lg:items-start">
           {/* Left */}
           <div className="mb-14 lg:mb-0">
             <motion.span
@@ -50,7 +50,7 @@ export function LandingFaq() {
           </div>
 
           {/* Right: accordion */}
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible className="w-full h-[460px]">
             {faqContent.items.map((item, index) => (
               <motion.div
                 key={index}
