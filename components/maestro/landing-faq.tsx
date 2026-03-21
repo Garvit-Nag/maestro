@@ -29,7 +29,7 @@ export function LandingFaq() {
       <div ref={ref} className="max-w-screen-xl">
         <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-24 lg:items-start">
           {/* Left */}
-          <div className="mb-14 lg:mb-0">
+          <div className="mb-14 lg:mb-0 flex flex-col items-center lg:items-start text-center lg:text-left">
             <motion.span
               initial={{ opacity: 0, y: 10 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
