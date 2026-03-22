@@ -292,10 +292,20 @@ export async function POST(request: NextRequest) {
       conversationId,
       suggest_new_chat: totalMessages > 20,
     })
-  } catch (e: unknown) {
+  } catch (e: any) {
     console.error("Chat route error:", e)
+    
+    let errorMessage = "VAR is reviewing this one. Something went wrong."
+    const errString = e?.message?.toLowerCase() || ""
+    
+    if (errString.includes("429") || errString.includes("too many requests") || errString.includes("quota") || errString.includes("resource has been exhausted")) {
+      errorMessage = "Oops! Looks like the AI has run out of free credits for now. Please try again later."
+    } else if (errString.includes("503") || errString.includes("overloaded")) {
+      errorMessage = "The AI servers are currently overloaded. Please give it a moment and try again."
+    }
+
     return NextResponse.json(
-      { error: "VAR is reviewing this one. Try again.", text: "Something went wrong. Please try again.", components: [] },
+      { error: errorMessage, text: errorMessage, components: [] },
       { status: 500 }
     )
   }

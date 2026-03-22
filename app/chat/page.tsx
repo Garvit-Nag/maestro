@@ -119,13 +119,13 @@ function ChatPageInner() {
       }
       setMessages((prev) => [...prev, assistantMessage])
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Something went wrong."
+      const errMsg = err instanceof Error ? err.message : "VAR is reviewing this one. Something went wrong."
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: `VAR is reviewing this one. ${errMsg} Try again.`,
+          content: errMsg,
           components: [],
         },
       ])
